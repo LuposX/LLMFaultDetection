@@ -7,7 +7,12 @@ verified. One JSON line per trial is appended to --out.
 
 import argparse
 import json
+import os
 import time
+
+# Reduce allocator fragmentation (eager attention has spiky allocation
+# peaks); must be set before torch initializes CUDA.
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -46,7 +51,8 @@ def main():
                         help="max examples per task (smoke tests); "
                              "gsm8k-limit applies to gsm8k regardless")
     parser.add_argument("--batch-size", type=int, default=8,
-                        help="base batch size; wikitext always runs at 1")
+                        help="base batch size; wikitext always runs at 1 "
+                             "(eager attention: batch 16 OOMs at seq~2k)")
     parser.add_argument("--model", default=MODEL_ID)
     parser.add_argument("--out", default="results/trials.jsonl")
     parser.add_argument("--device", default=None,
