@@ -10,6 +10,7 @@ Evaluation runs on the model object as it currently sits in memory, so
 injected weights are benchmarked without reloading anything from disk.
 """
 
+import torch
 import lm_eval
 from lm_eval.models.huggingface import HFLM
 
@@ -62,5 +63,9 @@ def evaluate(model, tasks, gsm8k_limit=200, batch_size=8, limit=None):
         for t, metrics in result["results"].items():
             merged[t] = {k: v for k, v in metrics.items()
                          if isinstance(v, (int, float))}
+        # Eager attention peaks are spiky; without this the reserved-but-
+        # unallocated pool from the previous task's batch shapes OOMs the
+        # next task's first long request.
+        torch.cuda.empty_cache()
 
     return merged

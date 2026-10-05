@@ -11,14 +11,15 @@ import os
 import time
 
 # Reduce allocator fragmentation (eager attention has spiky allocation
-# peaks); must be set before torch initializes CUDA.
-os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+# peaks); must be set before torch initializes CUDA. New-style var name:
+# the old PYTORCH_CUDA_ALLOC_CONF is deprecated and did not take effect.
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from inject import inject_model, snapshot_weights, restore_weights, verify_restore
-from evaluate import evaluate
+from evalbench import evaluate
 
 MODEL_ID = "Qwen/Qwen3-0.6B"
 ALL_TASKS = ["hellaswag", "wikitext", "mmlu", "gsm8k"]

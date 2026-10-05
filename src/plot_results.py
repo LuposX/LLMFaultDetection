@@ -12,7 +12,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from evaluate import PREFERRED_METRIC
+from evalbench import PREFERRED_METRIC
 
 
 def pick_metric(task, metrics):
