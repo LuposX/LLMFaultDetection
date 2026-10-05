@@ -3,6 +3,18 @@
 Decisions here shape the results, so they are written down. Everything else
 is in code comments.
 
+## Attention on RDNA4: eager only, per-task batch sizes
+
+The nixpkgs torch 2.9.1/ROCm 6.4.3 build segfaults in `scaled_dot_product_attention`
+on gfx1201: the FLASH and mem-efficient backends crash outright, only the
+MATH backend survives. Transformers is therefore loaded with
+`attn_implementation="eager"` (equivalent to MATH), which materializes the
+full attention matrix — memory scales as batch × heads × seq². Consequence:
+batch size is set per task in evaluate.py. Hellaswag/MMLU/GSM8K contexts
+are short (~0.5–2k tokens) and run at batch 8; wikitext requests are single
+whole documents (~10k tokens) and must run at batch 1. This is what keeps
+the 16 GB card from OOM-ing, not an efficiency choice.
+
 ## Everything from nixpkgs stable
 
 The environment is fully declarative: `python3.withPackages` over

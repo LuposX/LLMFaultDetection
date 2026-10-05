@@ -42,7 +42,8 @@ def main():
     parser.add_argument("--tasks", default=",".join(ALL_TASKS),
                         help="subset of: " + ",".join(ALL_TASKS))
     parser.add_argument("--gsm8k-limit", type=int, default=200)
-    parser.add_argument("--batch-size", default="auto")
+    parser.add_argument("--batch-size", type=int, default=8,
+                        help="base batch size; wikitext always runs at 1")
     parser.add_argument("--model", default=MODEL_ID)
     parser.add_argument("--out", default="results/trials.jsonl")
     parser.add_argument("--device", default=None,
