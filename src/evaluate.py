@@ -49,6 +49,9 @@ def evaluate(model, tasks, gsm8k_limit=200, batch_size=8):
         runs.append(("gsm8k", 5, gsm8k_limit, batch_size))
 
     for task, fewshot, limit, bs in runs:
+        # simple_evaluate ignores batch_size for a prebuilt LM, so the
+        # per-task batch is set on the HFLM instance directly.
+        lm.batch_size = bs
         result = lm_eval.simple_evaluate(
             model=lm,
             tasks=[task],
