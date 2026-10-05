@@ -42,6 +42,9 @@ def main():
     parser.add_argument("--tasks", default=",".join(ALL_TASKS),
                         help="subset of: " + ",".join(ALL_TASKS))
     parser.add_argument("--gsm8k-limit", type=int, default=200)
+    parser.add_argument("--limit", type=int, default=None,
+                        help="max examples per task (smoke tests); "
+                             "gsm8k-limit applies to gsm8k regardless")
     parser.add_argument("--batch-size", type=int, default=8,
                         help="base batch size; wikitext always runs at 1")
     parser.add_argument("--model", default=MODEL_ID)
@@ -83,7 +86,8 @@ def main():
                 t0 = time.time()
                 metrics = evaluate(model, tasks,
                                    gsm8k_limit=args.gsm8k_limit,
-                                   batch_size=args.batch_size)
+                                   batch_size=args.batch_size,
+                                   limit=args.limit)
                 eval_s = time.time() - t0
 
                 record = {**meta, "rho": rho, "seed": seed,

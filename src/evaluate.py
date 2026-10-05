@@ -22,7 +22,7 @@ PREFERRED_METRIC = {
 }
 
 
-def evaluate(model, tasks, gsm8k_limit=200, batch_size=8):
+def evaluate(model, tasks, gsm8k_limit=200, batch_size=8, limit=None):
     """Run the requested tasks and return {task: {metric: value}}.
 
     `tasks` is a subset of {"hellaswag", "wikitext", "mmlu", "gsm8k"}.
@@ -40,15 +40,15 @@ def evaluate(model, tasks, gsm8k_limit=200, batch_size=8):
 
     runs = []
     if "hellaswag" in tasks:
-        runs.append(("hellaswag", None, None, batch_size))
+        runs.append(("hellaswag", None, limit, batch_size))
     if "wikitext" in tasks:
-        runs.append(("wikitext", None, None, 1))
+        runs.append(("wikitext", None, limit, 1))
     if "mmlu" in tasks:
-        runs.append(("mmlu", 5, None, batch_size))
+        runs.append(("mmlu", 5, limit, batch_size))
     if "gsm8k" in tasks:
         runs.append(("gsm8k", 5, gsm8k_limit, batch_size))
 
-    for task, fewshot, limit, bs in runs:
+    for task, fewshot, task_limit, bs in runs:
         # simple_evaluate ignores batch_size for a prebuilt LM, so the
         # per-task batch is set on the HFLM instance directly.
         lm.batch_size_per_gpu = bs
@@ -57,7 +57,7 @@ def evaluate(model, tasks, gsm8k_limit=200, batch_size=8):
             tasks=[task],
             num_fewshot=fewshot,   # None -> task defaults (hellaswag: 0)
             batch_size=bs,
-            limit=limit,
+            limit=task_limit,
         )
         for t, metrics in result["results"].items():
             merged[t] = {k: v for k, v in metrics.items()
