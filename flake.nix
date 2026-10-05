@@ -18,7 +18,20 @@
         inherit system;
         config.allowUnfree = true;
       };
-      pythonEnv = pkgs.python3.withPackages (ps: with ps; [
+      # Force every Python package (accelerate, lm-eval, ...) onto the ROCm
+      # torch build; otherwise the default torch is pulled in too and the
+      # env fails with duplicate site-packages paths. This mirrors nixpkgs'
+      # torchWithRocm but on the pre-override torch to avoid recursion.
+      pythonWithRocm = pkgs.python3.override {
+        packageOverrides = _pyfinal: pyprev: {
+          torch = pyprev.torch.override {
+            triton = pyprev.triton-no-cuda;
+            rocmSupport = true;
+            cudaSupport = false;
+          };
+        };
+      };
+      pythonEnv = pythonWithRocm.withPackages (ps: with ps; [
         torchWithRocm # PyTorch with AMD ROCm backend
         transformers
         accelerate

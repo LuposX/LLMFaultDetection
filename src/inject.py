@@ -14,6 +14,13 @@ is exactly what a bf16 deployment would run.
 import torch
 
 
+def _popcount_u8(x: torch.Tensor) -> torch.Tensor:
+    """Set bits per element of a uint8 tensor (SWAR population count)."""
+    x = x - ((x >> 1) & 0x55)          # pairs
+    x = (x & 0x33) + ((x >> 2) & 0x33) # nibbles
+    return (x + (x >> 4)) & 0x0F       # bytes
+
+
 def flip_bits(tensor: torch.Tensor, rho: float, generator: torch.Generator,
               chunk_bits: int = 1 << 27) -> torch.Tensor:
     """Return a copy of `tensor` with each underlying bit flipped with prob rho.
@@ -93,17 +100,21 @@ def verify_restore(model: torch.nn.Module, snapshot: dict) -> bool:
 
 
 if __name__ == "__main__":
-    # Self-test of the injection statistics: flip fractions must match rho,
-    # and repeated draws with the same seed must be identical.
+    # Self-test of the injection statistics: flipped bit counts must match
+    # rho, and repeated draws with the same seed must be BITWISE identical.
+    # Comparisons go through the uint8 view — flipping exponent bits
+    # produces NaN/inf values in bf16, and torch.equal on NaN always fails.
     for rho in [0.5, 1e-6, 1e-9]:
         gen = torch.Generator().manual_seed(42)
         t = torch.randn(1000, 1000, dtype=torch.bfloat16)
         out = flip_bits(t, rho, gen)
         a = t.view(torch.uint8)
         b = out.view(torch.uint8)
-        diff = (a ^ b).sum().item()
+        diff = _popcount_u8(a ^ b).sum().item()
         expected = rho * t.numel() * 16  # 16 bits per bf16 element
         print(f"rho={rho:g}: flipped {diff} bits, expected ~{expected:.1f}")
+        assert torch.equal(a, b.view(a.shape) ^ (a ^ b)), "xor not idempotent"
         gen2 = torch.Generator().manual_seed(42)
-        assert torch.equal(flip_bits(t, rho, gen2), out), "not reproducible"
+        out2 = flip_bits(t, rho, gen2)
+        assert torch.equal(b, out2.view(torch.uint8)), "not reproducible"
     print("inject self-test passed")
