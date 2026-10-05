@@ -24,6 +24,9 @@ def load_model(model_id: str, device: str):
         model_id,
         dtype=torch.bfloat16,
         device_map=device,
+        # SDPA segfaults on RDNA4 (gfx1201) with the nixpkgs torch 2.9.1
+        # build; plain eager attention works and is fast enough for 0.6B.
+        attn_implementation="eager",
     )
     model.eval()
     tokenizer = AutoTokenizer.from_pretrained(model_id)  # kept for future prompt work
