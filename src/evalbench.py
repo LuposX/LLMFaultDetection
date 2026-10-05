@@ -36,7 +36,11 @@ def evaluate(model, tasks, gsm8k_limit=200, batch_size=8, limit=None):
     (~10k tokens) and must run at batch 1; the other tasks are
     short-context and tolerate larger batches.
     """
-    lm = HFLM(pretrained=model, batch_size=batch_size)
+    # Cap the evaluation context. Eager attention needs batch*heads*seq^2
+    # memory (fp32 softmax peak); uncapped wikitext docs (~10k tokens) OOM
+    # a 16 GB card at batch 1. 4096 tokens truncates the tail of long docs
+    # but applies identically to every trial, so the comparison stays fair.
+    lm = HFLM(pretrained=model, batch_size=batch_size, max_length=4096)
     merged = {}
 
     runs = []
