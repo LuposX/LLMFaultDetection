@@ -27,7 +27,7 @@ matmul on the GPU.
 ## Run
 
 ```
-# full grid: rho in {0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5}, 3 draws per rho
+# full grid: rho in {0, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5}, 3 draws per rho
 python src/run_experiment.py
 
 # smoke test (minutes instead of hours)

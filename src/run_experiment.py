@@ -41,7 +41,7 @@ def load_model(model_id: str, device: str):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--rhos", default="0,1e-9,1e-8,1e-7,1e-6,1e-5",
+    parser.add_argument("--rhos", default="0,1e-11,1e-10,1e-9,1e-8,1e-7,1e-6,1e-5",
                         help="comma-separated flip probabilities")
     parser.add_argument("--seeds", type=int, default=3,
                         help="independent fault draws per rho (rho=0 runs once)")

@@ -44,14 +44,28 @@ fault model ("fault injection is performed exclusively on the network
 weights and biases"). Per-layer or sensitivity-weighted distributions come
 later, when ATPG optimization needs them.
 
-## rho grid
+## rho grid and the bf16 cliff
 
-Default grid: rho in {0, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5}, 3 independent draws
-per rho. At 0.6B params (~9.6 Gbit of weights), rho = 1e-6 flips ~9600 bits
-per draw; random single-bit-flip studies on similar models show that even
-thousands of random flips can leave accuracy nearly intact, so 1e-5
-(~96k flips, ~0.1% of all bits) is included as the upper end to make sure
-the sweep actually shows signal. The grid is cheap to change via --rhos.
+Default grid: rho in {0, 1e-11, 1e-10, 1e-9, 1e-8, 1e-7, 1e-6, 1e-5}, 3
+independent draws per rho. At 0.6B params (~9.6 Gbit of weights), expected
+flips per draw are: 1e-11 -> ~0.1, 1e-10 -> ~1, 1e-9 -> ~10, 1e-8 -> ~96.
+
+Smoke runs showed why the grid reaches down to 1e-11: with all bf16 bits
+eligible, roughly half the flips land in the exponent byte and scale a
+weight by up to 2^±128. The model is statistically intact at ~1–10 flips
+(1e-11 … 1e-9) and completely destroyed at ~100 flips (1e-8: hellaswag
+acc_norm 49.7% -> 30.7%, wikitext ppl 27.5 -> 1.3e6) — a cliff, not a
+smooth curve. In the saturated region, metrics of different draws coincide
+(the corrupted model collapses to the same degenerate output regardless of
+which weights were hit), so error bars there are not meaningful. The
+detection-relevant regime for the ATPG work is the transition band around
+1e-9 … 1e-8.
+
+Related fix worth remembering: torch.rand is float32 (2^-24 grid); with
+float32 mask draws, exact-zero draws flip bits at a ~6e-8 floor, burying
+the true rate below rho ~ 1e-8. Mask draws use float64.
+
+## Benchmarks
 
 ## Custom injector instead of LLMFI
 
