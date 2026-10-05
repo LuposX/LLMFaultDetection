@@ -22,13 +22,17 @@ def _popcount_u8(x: torch.Tensor) -> torch.Tensor:
 
 
 def flip_bits(tensor: torch.Tensor, rho: float, generator: torch.Generator,
-              chunk_bits: int = 1 << 27) -> torch.Tensor:
+              chunk_bits: int = 1 << 24) -> torch.Tensor:
     """Return a copy of `tensor` with each underlying bit flipped with prob rho.
 
     The tensor is reinterpreted as raw bytes and processed in chunks so the
     Bernoulli masks never exceed a few hundred MB even for the embedding
     matrix (~300 MB as bf16). Per-bit independence is preserved across
     chunks because each mask draw is independent.
+
+    Mask draws are float64: torch.rand's float32 grid is 2^-24 (~6e-8), so
+    at rho below that, exact-zero draws would flip bits at a ~6e-8 floor
+    regardless of rho.
     """
     if rho <= 0:
         return tensor.clone()
@@ -45,7 +49,8 @@ def flip_bits(tensor: torch.Tensor, rho: float, generator: torch.Generator,
         chunk = out_u8[start:end]
         flip = torch.zeros(end - start, dtype=torch.uint8)
         for bit in range(8):
-            mask = torch.rand(end - start, generator=generator) < rho
+            mask = torch.rand(end - start, dtype=torch.float64,
+                              generator=generator) < rho
             flip |= mask.to(torch.uint8) << bit
         chunk ^= flip  # in-place on the slice view
 
