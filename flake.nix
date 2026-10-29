@@ -23,11 +23,16 @@
       # env fails with duplicate site-packages paths. This mirrors nixpkgs'
       # torchWithRocm but on the pre-override torch to avoid recursion.
       pythonWithRocm = pkgs.python3.override {
-        packageOverrides = _pyfinal: pyprev: {
+        packageOverrides = pyself: pyprev: {
           torch = pyprev.torch.override {
             triton = pyprev.triton-no-cuda;
             rocmSupport = true;
             cudaSupport = false;
+          };
+          # not in nixpkgs; see pkgs/laya.nix. Depends on the ROCm torch
+          # above, which is why it lives in this override set.
+          laya = pyself.callPackage ./pkgs/laya.nix {
+            torch = pyself.torch;
           };
         };
       };
@@ -37,6 +42,8 @@
         accelerate
         lm-eval
         matplotlib
+        sentence-transformers # embedding-based fault-effect metrics (sembench.py)
+        laya # decision-model judge for the semantic-difference metric
       ]);
     in
     {
