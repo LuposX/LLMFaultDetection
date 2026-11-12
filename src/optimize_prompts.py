@@ -72,7 +72,9 @@ AMPLITUDE = 30.0
 def free_run(model, ids, max_new_tokens, eos_id):
     """Greedy continuation of a token-id prompt (no padding, no trimming:
     teacher forcing and raw comparison want the full tail)."""
-    out = model.generate(ids.unsqueeze(0), max_new_tokens=max_new_tokens,
+    ids = ids.unsqueeze(0)
+    out = model.generate(ids, attention_mask=torch.ones_like(ids),
+                         max_new_tokens=max_new_tokens,
                          do_sample=False, pad_token_id=eos_id)
     return out[0, ids.numel():].tolist()
 
