@@ -21,12 +21,30 @@ export HF_HOME="$HOME/hf_cache"            # model cache (persists)
 
 set -euo pipefail
 
-# Locate the repo root relative to THIS script (hpc/run_pattern_comparison.sh),
-# so it works no matter where sbatch is invoked from. Requires the repo to be
-# uploaded with its structure intact (src/, src/plots/, data/, requirements.txt).
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+# Locate the repo root. sbatch runs a COPY of this script from its spool
+# directory, so script-relative paths are unreliable; search the submit dir
+# and script-relative candidates for a directory containing both markers.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)" || SCRIPT_DIR=""
+REPO_ROOT=""
+for cand in "${SLURM_SUBMIT_DIR:-}" "$SCRIPT_DIR" "$SCRIPT_DIR/.." \
+            "$SCRIPT_DIR/../.."; do
+    [ -n "$cand" ] || continue
+    if [ -f "$cand/requirements.txt" ] && \
+       [ -f "$cand/src/run_pattern_comparison.py" ]; then
+        REPO_ROOT="$(cd "$cand" && pwd)"
+        break
+    fi
+done
+if [ -z "$REPO_ROOT" ]; then
+    echo "ERROR: could not locate the repo (need requirements.txt and " \
+         "src/run_pattern_comparison.py together)"
+    echo "  searched: submit dir=${SLURM_SUBMIT_DIR:-unset} script dir=$SCRIPT_DIR"
+    echo "  submit dir contents:"
+    ls -la "${SLURM_SUBMIT_DIR:-.}" || true
+    exit 1
+fi
 cd "$REPO_ROOT"
+echo "== repo root: $REPO_ROOT"
 
 # Fail early with a clear message if the upload is incomplete
 for f in requirements.txt src/run_pattern_comparison.py \
