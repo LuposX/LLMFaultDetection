@@ -20,7 +20,19 @@ VENV_DIR="$HOME/atpg-venv"                 # venv lives in $HOME (persists)
 export HF_HOME="$HOME/hf_cache"            # model cache (persists)
 
 set -euo pipefail
-cd "$SLURM_SUBMIT_DIR"
+
+# Locate the repo root relative to THIS script (hpc/run_pattern_comparison.sh),
+# so it works no matter where sbatch is invoked from. Requires the repo to be
+# uploaded with its structure intact (src/, src/plots/, data/, requirements.txt).
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+cd "$REPO_ROOT"
+
+# Fail early with a clear message if the upload is incomplete
+for f in requirements.txt src/run_pattern_comparison.py \
+        src/plots/plot_pattern_comparison.py data/prompts.jsonl; do
+    [ -f "$f" ] || { echo "MISSING: $f — upload the full repo to the cluster"; exit 1; }
+done
 
 echo "== job $SLURM_JOB_ID on $(hostname), GPU: $CUDA_VISIBLE_DEVICES"
 nvidia-smi || true
