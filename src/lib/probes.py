@@ -65,6 +65,12 @@ class ProbeSet:
         self.healthy_emb = None
         self.laya_agent = None  # semantic judge, lazy-loaded on CPU
         self.laya_identical = None  # judge P(same) on identical pairs
+        # provisional detection threshold for the semantic criterion: the
+        # 5th percentile of P(same) over identical pairs. By construction
+        # ~5% of identical texts fall below it (false-flag rate), giving
+        # the coverage curve a defined floor. Proper calibration (tau-95
+        # from paraphrase data, per the proposal) comes later.
+        self.laya_threshold = None
 
     @property
     def n_prompts(self):
@@ -127,6 +133,8 @@ class ProbeSet:
                                         self.laya_q)
             vals.append(r["answers"]["same_meaning"]["noul"])
         self.laya_identical = sum(vals) / len(vals)
+        sv = sorted(vals)
+        self.laya_threshold = sv[min(len(sv) - 1, int(0.05 * len(sv)))]
         return self.healthy_texts
 
     @torch.no_grad()
@@ -175,6 +183,8 @@ class ProbeSet:
                 {"reference": self.healthy_texts[i], "observed": texts[i]},
                 self.laya_q)
             row["laya_same"] = judge["answers"]["same_meaning"]["noul"]
+            if self.laya_threshold is not None:
+                row["laya_flag"] = row["laya_same"] < self.laya_threshold
             rows.append(row)
         # embedding cosine in one batch
         emb = self.embedder.encode(texts, normalize_embeddings=True)
@@ -192,12 +202,15 @@ class ProbeSet:
             if not rs:
                 return None
             div = [r["first_div"] for r in rs if r["first_div"] is not None]
+            flags = [r["laya_flag"] for r in rs
+                     if r.get("laya_flag") is not None]
             return {
                 "token_match": mean(r["match"] for r in rs),
                 "frac_diverged": len(div) / len(rs),
                 "first_div_mean": mean(div),
                 "js": mean(r["js"] for r in rs),
                 "laya_same": mean(r["laya_same"] for r in rs),
+                "laya_flag_frac": sum(flags) / len(flags) if flags else None,
                 "embed_cos": mean(r["cos"] for r in rs),
                 "n": len(rs),
             }

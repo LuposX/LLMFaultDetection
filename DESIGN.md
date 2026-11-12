@@ -125,6 +125,17 @@ saturates at log 2 instead and rises monotonically.
 
 ## The Laya semantic judge
 
+On the real probe set the judge's identical-pair P(same) mean is 0.335
+(the hand-pair sanity values below are much higher — the checkpoint's
+domain gap is severe on free-form wikitext/SciQ/GSM8K outputs). Only the
+relative-to-threshold use is meaningful; the provisional detection
+threshold is the 5th percentile of the identical-pair scores (0.063 on
+the current set), giving a ~5% per-prompt false-flag floor by
+construction. Consequence for coverage: "any prompt flags" is an invalid
+draw-level rule for a noisy criterion — with 100 prompts it detects
+healthy models with probability ~99%. Draw-level semantic detection is
+therefore a one-sided binomial test against that floor (plot_coverage).
+
 The `laya` package (pkgs/laya.nix, built from the PyPI sdist 0.4.7 — not in
 nixpkgs; its core deps are exactly the environment's torch/transformers/
 safetensors/huggingface-hub/numpy and it rides the ROCm torch override).
@@ -158,6 +169,19 @@ smooth curve. In the saturated region, metrics of different draws coincide
 which weights were hit), so error bars there are not meaningful. The
 detection-relevant regime for the ATPG work is the transition band around
 1e-9 … 1e-8.
+
+Coverage over the same grid (probes-only rerun, 3 draws/rho): at 1e-11 every
+draw produced zero flips — with a Poisson mean of ~0.1, draws that flip
+anything are rare and a single flip is usually masked anyway, so that grid
+point yields no coverage data. Token-match draw-level coverage: 1/3 at
+1e-10 (~1–2 flips, usually masked), 3/3 from 1e-9 up. The per-prompt
+detection rate is the finer quantity: ~0.2 at 1e-10, 0.56–0.64 at 1e-9
+(4–13 flips), 1.0 at 1e-8. The draw-level step hides this gradient — a
+fault at 1e-9 is detected because roughly half the probe set fires, not
+because one prompt got lucky. The semantic (laya) criterion tracks the
+same transition with no clear sensitivity advantage at this resolution;
+its curve is provisional until the threshold is calibrated (see the
+judge section).
 
 Related fix worth remembering: torch.rand is float32 (2^-24 grid); with
 float32 mask draws, exact-zero draws flip bits at a ~6e-8 floor, burying

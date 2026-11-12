@@ -1,0 +1,15 @@
+# Environment for the deterministic ATPG comparison experiment.
+# Target: bwUniCluster 3.0 (H100/A100 partitions, RHEL 9.4).
+# Install into a venv with the standard PyPI wheels — on Linux these are
+# CUDA builds by default, no extra index needed for H100/A100.
+#
+# Version pins mirror the development environment (torch 2.9.1 stack).
+# The code pins attn_implementation="eager" for bitwise determinism, so it
+# does not depend on flash/mem-efficient kernels and runs the same on the
+# cluster as on the ROCm development box.
+torch==2.9.1
+transformers==4.57.1
+accelerate==1.11.0
+safetensors==0.7.0
+numpy==2.3.4
+matplotlib==3.10.5

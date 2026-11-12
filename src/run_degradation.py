@@ -92,6 +92,10 @@ def main():
     parser.add_argument("--sem-batch", type=int, default=8)
     parser.add_argument("--no-sem", action="store_true",
                         help="skip the probe fault-effect metrics")
+    parser.add_argument("--skip-eval", action="store_true",
+                        help="skip the lm-eval benchmark suite, run only "
+                             "the probe fault-effect metrics (fast: the "
+                             "coverage curves need only probes)")
     parser.add_argument("--model", default=MODEL_ID)
     parser.add_argument("--out", default=os.path.join(ROOT, "results/trials.jsonl"))
     parser.add_argument("--device", default=None,
@@ -132,6 +136,7 @@ def main():
         "sem_prompts": None if sem is None else sem.n_prompts,
         "sem_max_new_tokens": args.sem_max_new_tokens,
         "laya_identical": None if sem is None else sem.laya_identical,
+        "laya_threshold": None if sem is None else sem.laya_threshold,
     }
 
     trials = [(rho, seed)
@@ -199,14 +204,18 @@ def main():
                 continue
 
             try:
-                t0 = time.time()
-                metrics = evaluate(model, tasks,
-                                   gsm8k_limit=args.gsm8k_limit,
-                                   batch_size=args.batch_size,
-                                   limit=args.limit,
-                                   on_task=on_task,
-                                   mmlu_limit=args.mmlu_limit)
-                eval_s = time.time() - t0
+                eval_s = 0.0
+                if args.skip_eval:
+                    metrics = {"skipped": "--skip-eval"}
+                else:
+                    t0 = time.time()
+                    metrics = evaluate(model, tasks,
+                                       gsm8k_limit=args.gsm8k_limit,
+                                       batch_size=args.batch_size,
+                                       limit=args.limit,
+                                       on_task=on_task,
+                                       mmlu_limit=args.mmlu_limit)
+                    eval_s = time.time() - t0
 
                 sem_s = 0.0
                 sem_metrics = None

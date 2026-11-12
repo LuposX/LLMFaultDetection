@@ -44,6 +44,7 @@ so scripts work from any cwd.
 | `checks/check_sdot.py` | verify the soft (SDoT) and hard (token id) paths agree as τ → 0, and that the soft path is differentiable; records the sweep to `results/sdot_tau_sweep.json` |
 | `make_prompts.py` | build `data/prompts.jsonl` (100 probe prompts: wiki/qa/math) |
 | `run_degradation.py` | the rho sweep: inject → benchmark → probe → restore → log one JSON line per trial |
+| `optimize_prompts.py` | first ATPG loop: optimize one soft prompt against one known fault (teacher-forced), discretize, validate free-running detection. `--objective js` (dense divergence baseline) or `margin` (hinge on the logit margin that drives the argmax-flip detection criterion); `--dtype bf16` (deployment precision) or `fp32` (un-quantized gradient signal, reports a separate bf16 deployment verdict) |
 
 `src/plots/` — figure scripts (one per figure, shared axis/metric helpers in `common.py`):
 
@@ -51,6 +52,7 @@ so scripts work from any cwd.
 |---|---|
 | `plot_degradation.py` | `results/degradation_vs_rho.png` (benchmark scores vs fault magnitude) |
 | `plot_probes.py` | `results/probes_vs_rho.png` (probe metrics vs fault magnitude) |
+| `plot_coverage.py` | `results/coverage_vs_rho.png` (fault coverage: fraction of draws detected by the random probe set, one panel per probe metric — token match, JS, embedding cosine, laya — with detection rules per metric) |
 | `plot_sdot_sweep.py` | `results/sdot_tau_sweep.png` (soft-vs-hard logit difference vs temperature, from the check's JSON record) |
 
 Library self-tests run through the package mechanism, e.g.
@@ -68,9 +70,11 @@ checks/check_sdot.py → results/sdot_tau_sweep.json
                           plots/*.py → PNGs
 ```
 
-Planned next (ATPG detection pipeline, deterministic variant):
-`optimize_prompts.py` (ATPG optimization loop over the SDoT path),
-`checks/check_detection.py` (discretize + validate detection).
+Planned next (ATPG detection pipeline, deterministic variant): the
+objective/optimization refinements observed to be needed — margin-based
+objective (target argmax flips directly, not JS) and/or fp32 optimization
+passes — then `checks/check_detection.py` (multi-pattern validation),
+coverage vs random baselines, held-out faults.
 
 ## Check the environment
 
@@ -90,8 +94,12 @@ python src/run_degradation.py
 # smoke test (minutes instead of hours)
 python src/run_degradation.py --tasks hellaswag,wikitext --seeds 1
 
+# probes only (~3.5 min/trial, no benchmarks): enough for the coverage curves
+python src/run_degradation.py --skip-eval
+
 python src/plots/plot_degradation.py   # results/degradation_vs_rho.png
 python src/plots/plot_probes.py        # results/probes_vs_rho.png
+python src/plots/plot_coverage.py      # results/coverage_vs_rho.png
 python src/plots/plot_sdot_sweep.py    # results/sdot_tau_sweep.png
 ```
 
