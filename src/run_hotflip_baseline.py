@@ -104,8 +104,7 @@ def main():
     with open(args.out, "w") as out:
         for fault in faults:
             t0 = time.time()
-            fault_rows0 = counter.row_equiv()
-            fault_back0 = counter.backwards
+            c0 = counter.as_dict()   # per-fault compute delta baseline
             applier = FaultApplier(fault, "bf16")
             starts = []
             detected_any = None
@@ -134,15 +133,13 @@ def main():
                     detected_any = d
                     stop_reason = f"detected-at-start-{si}"
                     break
-                if counter.row_equiv() - fault_rows0 >= args.budget_rows:
+                if counter.row_equiv() - c0["row_equiv"] >= args.budget_rows:
                     stop_reason = "budget-exhausted"
                     break
 
-            compute = counter.as_dict()
-            compute = {k: (v - (fault_rows0 if k == "row_equiv"
-                                else fault_back0 if k == "backwards" else 0))
-                       for k, v in compute.items()
-                       if k in ("rows", "backwards", "row_equiv")}
+            c1 = counter.as_dict()
+            compute = {k: c1[k] - c0[k]
+                       for k in ("rows", "backwards", "row_equiv")}
             compute["elapsed_s"] = round(time.time() - t0, 1)
 
             record = {
