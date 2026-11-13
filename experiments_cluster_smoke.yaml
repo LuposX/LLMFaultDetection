@@ -1,0 +1,31 @@
+# Throwaway speed-probe config for the CPU cluster (bwUniCluster).
+#
+# Purpose: measure HotFlip throughput (row-equivalents per second) on one
+# CPU allocation before sizing the real B2 array job. The per-fault budget
+# is deliberately cut to 2000 rows so the probe finishes in minutes; the
+# record's compute.row_equiv and elapsed_s give the throughput, and the
+# real run's wall time is then estimated as
+#
+#   faults x budget_rows / (row_equiv/elapsed_s) / n_concurrent_shards
+#
+# One mantissa fault, seed 0 (a known-hard silent-class fault may stall
+# early; if stop_reason != budget-exhausted, rerun the probe — seed 1
+# exercises the full budget path).
+#
+# Submit from the repo root:
+#   CONFIG=experiments_cluster_smoke.yaml SHARDS=1 sbatch hpc/run_experiments.sh
+# Then report: the per-fault line + "total: ... row-equivalents" tail from
+# the slurm output, or results/exp_hotflip_smoke.jsonl.
+
+experiments:
+  - name: hotflip_speed_probe
+    method: hotflip
+    scopes: [mantissa]
+    seeds: [0, 1]          # seed0 0, 1 fault -> mantissa seed 0
+    out: results/exp_hotflip_smoke.jsonl
+    args:
+      hf-starts: 4
+      hf-steps: 150
+      hf-width: 4
+      budget-rows: 2000
+      m: 32

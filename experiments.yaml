@@ -1,0 +1,77 @@
+# Experiment queue for the optimized-vs-random pattern comparison.
+# Run:    python src/run_experiments.py --config experiments.yaml
+# Inspect: python src/run_experiments.py --config experiments.yaml --dry-run
+#
+# Experiments run top to bottom; each gets its own log next to its output
+# file. `args` entries are passed through as CLI flags to the method's
+# script (underscores become dashes, true/false become flag presence).
+
+common:
+  model: Qwen/Qwen3-0.6B
+
+experiments:
+  # B1: random-pattern baseline on the frozen fault set (manifest faults,
+  # cached decodes). Reference for every optimization method below.
+  - name: random_baseline
+    method: random
+    scopes: [mantissa, exponent]
+    seeds: all                    # manifest: 2 scopes x 20 seeds, k=1
+    out: results/exp_random.jsonl
+
+  # B2: HotFlip as a standalone method — greedy gradient-ranked token
+  # substitutions from probe prompts, no soft stage. Budget-matched to B1
+  # via measured row-equivalents (--budget-rows), so the comparison is on
+  # actual compute spent, not planned steps.
+  - name: hotflip_standalone
+    method: hotflip
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/exp_hotflip.jsonl
+    args:
+      hf-starts: 8
+      hf-steps: 150
+      hf-width: 4
+      budget-rows: 13000
+      m: 32
+
+  # B3/L1: independent per-fault optimization, first-token margin loss,
+  # with the full pipeline (relaxed soft stage + HotFlip + margin-guided
+  # discrete search, search also triggered on margin >= 0 ties).
+  - name: L1_first_token_margin
+    method: pattern_comparison
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/exp_L1.jsonl
+    args:
+      steps: 100
+      relax-rounding: true
+      hotflip: true
+      discrete-search: true
+      search-max-evals: 300
+
+  # Algorithm 1, joint K-pattern optimization with train/test fault split,
+  # loss and search fixed as above; run after the loss investigation so
+  # improvements attribute to the set-level algorithm.
+  - name: alg1_joint
+    method: pattern_set
+    scopes: [mantissa, exponent]
+    out: results/exp_alg1_joint.json
+    args:
+      mode: joint
+      patterns: 6
+      n-train: 12
+      faults: 16
+      relax-rounding: true
+      discrete-search: true
+      topk: 8
+      search-max-evals: 200
+
+  # --- planned (method not registered yet, listed for the roadmap) ------
+  # - name: activity_profile_scan   # depth-T dlogit scan per fault -> cache
+  #   method: activity_scan
+  # - name: L2_teacher_forced_T4    # softmin over first T=4 position hinges
+  #   method: pattern_comparison
+  #   args: {loss: softmin, T: 4}
+  # - name: L3_first_mismatch       # activity-weighted depth-anchored loss
+  #   method: pattern_comparison
+  #   args: {loss: mismatch}

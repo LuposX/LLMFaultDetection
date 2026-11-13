@@ -13,3 +13,5 @@ accelerate==1.11.0
 safetensors==0.7.0
 numpy==2.3.4
 matplotlib==3.10.5
+pyyaml==6.0.3
+tqdm==4.67.1

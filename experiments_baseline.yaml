@@ -1,0 +1,47 @@
+# Canonical random-pattern baseline (experiment B1) — the reference every
+# optimization method is compared against.
+#
+# Run:    python src/run_experiments.py --config experiments_baseline.yaml
+# Output: results/exp_random.jsonl (+ .log)
+#
+# Faults: the frozen manifest set, data/fault_manifest.json (2 scopes x
+# 20 seeds, single-bit flips, k=1) — the same faults every other method
+# evaluates. Decodes are cached platform-tagged under results/cache/, so
+# re-runs are free and the healthy reference is shared with later methods.
+#
+# Budget: 40 faults x 100 probes, 64 new tokens each — roughly 15 min on
+# the desktop GPU, far inside an 8 h window. Keep --n-probes 100 and
+# --batch 8 unchanged in later runs: bf16 decode is bitwise-reproducible
+# only for a fixed batch composition, so probes near a margin tie can
+# flip if the batching changes.
+
+common:
+  model: Qwen/Qwen3-0.6B
+
+experiments:
+  - name: random_baseline
+    method: random
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/exp_random.jsonl
+    args:
+      n-probes: 100
+      max-new-tokens: 64
+      batch: 8
+
+  # Flip-multiplicity sweep: same scopes/seeds as random_baseline at higher
+  # flip counts. `ks` selects the subset of the frozen manifest's k values
+  # to run (manifest holds 2, 4, 8, 10, 16). The k=1 point is the
+  # random_baseline experiment above, so the full coverage-vs-k curve is
+  # exp_random.jsonl + exp_random_k_sweep.jsonl.
+  - name: random_baseline_k_sweep
+    method: random
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/exp_random_k_sweep.jsonl
+    args:
+      manifest: data/fault_manifest_k_sweep.json
+      ks: [2, 4, 8, 10, 20, 50]
+      n-probes: 100
+      max-new-tokens: 64
+      batch: 8

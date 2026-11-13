@@ -34,9 +34,11 @@ import torch
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from lib.faults import sample_fault  # noqa: E402
 from lib.generation import generate_greedy  # noqa: E402
-from lib.inject import snapshot_weights, restore_weights, verify_restore  # noqa: E402
+from lib.inject import (snapshot_weights, restore_weights,  # noqa: E402
+                        verify_restore, unique_parameters)
 from lib.loading import load_model  # noqa: E402
-from lib.sdot import soft_forward, one_hot_logits  # noqa: E402
+from lib.sdot import (soft_forward, one_hot_logits,  # noqa: E402
+                      soft_embeddings)
 from optimize_prompts import (  # noqa: E402
     margin_loss, FaultApplier, free_run, first_divergence, AMPLITUDE)
 
@@ -99,7 +101,151 @@ def optimize_prompt(model, init_ids, applier, args):
         return Z.argmax(-1), curve, gnorm
 
 
-def discrete_search(model, disc, applier, args, tokenizer):
+def _free_run_score(model, ids, applier, m, eos):
+    """Ranking tuple for a candidate prompt under the REAL bf16 decode:
+    (0, first_divergence) if detected, else (1, 0). Lower is better."""
+    h = free_run(model, ids, m, eos)
+    applier.apply(model)
+    try:
+        f = free_run(model, ids, m, eos)
+    finally:
+        applier.undo(model)
+    d = first_divergence(h, f)
+    return (0 if d is not None else 1, d if d is not None else 0)
+
+
+def first_token_margin(model, ids, applier):
+    """Real-bf16 margin at the first generated token: F[t*] - max_{t!=t*} F[t],
+    where t* is the healthy argmax. Negative margin = the faulty model's
+    argmax flipped = first-token detection. This is the exact continuous
+    quantity the deployment criterion flips on, and costs two short
+    forward passes (no generation).
+    Returns (margin, t_star).
+    """
+    device = next(model.parameters()).device
+    emb = model.get_input_embeddings()(ids.unsqueeze(0).to(device))
+    with torch.no_grad():
+        h = model(inputs_embeds=emb).logits[0, -1]
+    t_star = int(h.argmax())
+    applier.apply(model)
+    try:
+        with torch.no_grad():
+            f = model(inputs_embeds=emb).logits[0, -1]
+    finally:
+        applier.undo(model)
+    f_rest = f.clone()
+    f_rest[t_star] = float("-inf")
+    return (f[t_star] - f_rest.max()).item(), t_star
+
+
+def hotflip_search(model, disc, applier, args, tokenizer, max_evals=None,
+                   counter=None):
+    """HotFlip-style greedy search over token substitutions.
+
+    One backward pass ranks every (position, token) substitution by the
+    first-order directional derivative of the margin loss w.r.t. the
+    one-hot input representation: the estimated loss change of replacing
+    token a at position j with token b is g[j][b] - g[j][a], with
+    g = dJ/d(one-hot input). The top positions by estimated improvement
+    are then verified with the REAL bf16 free-run (the deployment
+    criterion) and the best improving substitution is accepted; repeat.
+
+    The ranking backward runs on the RELAXED fp32 path (bf16 activation
+    rounding would zero the gradient exactly in the bands this stage
+    exists for); the fault is mirrored through FaultApplier's fp32 path
+    and the model is downcast afterwards (exact, must pass bitwise
+    restore). The accept step runs bf16, so accepted flips transfer.
+
+    Returns (best_ids, n_real_evaluations, n_flips_accepted).
+    """
+    vocab = model.get_input_embeddings().num_embeddings
+    eos = tokenizer.eos_token_id
+    L = disc.numel()
+    device = disc.device
+
+    def score(ids):
+        margin, t_star = first_token_margin(model, ids, applier)
+        # detected candidates (margin < 0) additionally rank by earliest
+        # free-run divergence; not-detected candidates rank by margin only
+        if margin < 0:
+            h = free_run(model, ids, args.m, eos)
+            applier.apply(model)
+            try:
+                f = free_run(model, ids, args.m, eos)
+            finally:
+                applier.undo(model)
+            d = first_divergence(h, f)
+            return (margin, d if d is not None else args.m)
+        return (margin, 0)
+
+    best_ids = disc.clone()
+    best_rank = score(best_ids)
+    if best_rank[0] < 0:
+        return best_ids, 1, 0
+    n_eval = 1
+    n_flips = 0
+
+    for step in range(args.hf_steps):
+        # --- ranking pass (fp32, one backward) -------------------------
+        pre_fp32 = {n: p.detach().clone()
+                    for n, p in unique_parameters(model)}
+        model.to(torch.float32)
+        rank_applier = FaultApplier(applier.fault, "fp32")
+        try:
+            dists = torch.zeros(L, vocab, device=device, dtype=torch.float32)
+            dists[torch.arange(L, device=device), best_ids] = 1.0
+            dists.requires_grad_(True)
+            emb = soft_embeddings(dists, model)
+            healthy = model(inputs_embeds=emb.unsqueeze(0)).logits[0]
+            rank_applier.apply(model)
+            try:
+                faulty = model(inputs_embeds=emb.unsqueeze(0)).logits[0]
+            finally:
+                rank_applier.undo(model)
+            loss = margin_loss(healthy[-1], faulty[-1], args.margin)
+            g = torch.autograd.grad(loss, dists)[0]          # [L, V]
+            if counter is not None:
+                counter.add_backward()
+        finally:
+            model.to(torch.bfloat16)
+            for n, p in unique_parameters(model):
+                if not torch.equal(p.detach(), pre_fp32[n]):
+                    raise RuntimeError("restore failed after hotflip ranking")
+
+        # estimated loss decrease for the best flip at each position
+        a_tok = best_ids.long()
+        g_a = g[torch.arange(L, device=device), a_tok]      # [L]
+        g_min_b, b_tok = g.min(dim=-1)                      # [L], [L]
+        improve = g_a - g_min_b                              # [L]
+        for j in range(L):                                   # exclude identity
+            if b_tok[j] == a_tok[j]:
+                improve[j] = float("-inf")
+        if not torch.isfinite(improve).any() or improve.max() <= 0:
+            break   # first-order estimate says no flip helps: local optimum
+
+        # --- verify the top-W candidates with the real bf16 decode ------
+        order = improve.argsort(descending=True)
+        accepted = False
+        for j in order[:args.hf_width].tolist():
+            if max_evals is not None and n_eval >= max_evals:
+                return best_ids, n_eval, n_flips
+            cand = best_ids.clone()
+            cand[j] = b_tok[j]
+            r = score(cand)
+            n_eval += 1
+            if r < best_rank:
+                best_ids, best_rank = cand, r
+                n_flips += 1
+                accepted = True
+                break   # greedy: apply the best accepted flip, re-rank
+        if best_rank[0] < 0:
+            break                   # detected: done
+        if not accepted:
+            break                   # no verified flip improved: local optimum
+    return best_ids, n_eval, n_flips
+
+
+def discrete_search(model, disc, applier, args, tokenizer, max_evals=None):
     """Forward-only local search on the discretized prompt.
 
     The soft optimum is limited by bf16 rounding the gradient cannot see;
@@ -107,22 +253,31 @@ def discrete_search(model, disc, applier, args, tokenizer):
     Candidates: replace each position with the top-k tokens of that
     position's softmax row (from the soft logits, recomputed once).
     Returns (best_ids, n_candidates_evaluated) — best by "detects, then
-    earliest divergence".
+    earliest divergence". max_evals bounds the total number of candidate
+    evaluations (the search is O(positions x topk) free-runs otherwise).
     """
     vocab = model.get_input_embeddings().num_embeddings
     eos = tokenizer.eos_token_id
 
     def score(ids):
-        h = free_run(model, ids, args.m, eos)
-        applier.apply(model)
-        f = free_run(model, ids, args.m, eos)
-        applier.undo(model)
-        d = first_divergence(h, f)
-        return (0 if d is not None else 1, d if d is not None else 0)
+        margin, _ = first_token_margin(model, ids, applier)
+        # detected candidates (margin < 0) additionally rank by earliest
+        # free-run divergence; not-detected candidates rank by margin only
+        if margin < 0:
+            h = free_run(model, ids, args.m, eos)
+            applier.apply(model)
+            try:
+                f = free_run(model, ids, args.m, eos)
+            finally:
+                applier.undo(model)
+            d = first_divergence(h, f)
+            return (margin, d if d is not None else args.m)
+        return (margin, 0)
 
-    best_ids, (best_rank, _) = disc, score(disc)
-    if best_rank == 0:
-        return best_ids, 0
+    best_ids = disc.clone()
+    best_rank = score(disc)
+    if best_rank[0] < 0:
+        return best_ids, 1
     n_eval = 1
 
     # top-k alternates per position, from a soft forward at tau=1 seeded by
@@ -144,11 +299,13 @@ def discrete_search(model, disc, applier, args, tokenizer):
             # greedy free-run, one prompt at a time (batch-1 decode keeps
             # the exact decode path of the deployment criterion)
             for c in batch:
-                r, _ = score(c)
+                if max_evals is not None and n_eval >= max_evals:
+                    return best_ids, n_eval
+                r = score(c)
                 n_eval += 1
                 if r < best_rank:
                     best_ids, best_rank = c, r
-                    if best_rank == 0:
+                    if best_rank[0] < 0:
                         return best_ids, n_eval
     return best_ids, n_eval
 
@@ -185,7 +342,25 @@ def main():
                     help="after the soft stage, refine the discretized "
                          "prompt with a forward-only local search "
                          "(top-k token substitutions)")
+    ap.add_argument("--relax-rounding", action="store_true",
+                    help="soft optimization with fp32 activations (model "
+                         "upcast; fault stays an exact bf16 bit flip; "
+                         "validation and discrete search always run the "
+                         "real bf16 decode)")
     ap.add_argument("--topk", type=int, default=32)
+    ap.add_argument("--search-max-evals", type=int, default=None,
+                    help="optional cap on candidate evaluations per "
+                         "discrete search (each eval is 2 bf16 free-runs)")
+    ap.add_argument("--hotflip", action="store_true",
+                    help="gradient-guided discrete refinement (HotFlip): one "
+                         "fp32 backward pass ranks all token substitutions, "
+                         "top candidates verified on the real bf16 decode; "
+                         "runs before discrete search, which remains the "
+                         "fallback")
+    ap.add_argument("--hf-steps", type=int, default=8,
+                    help="max accepted flips per hotflip search")
+    ap.add_argument("--hf-width", type=int, default=4,
+                    help="top-W gradient-ranked candidates verified per step")
     ap.add_argument("--log-every", type=int, default=25)
     ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--model", default=MODEL_ID)
@@ -243,8 +418,24 @@ def main():
                     .input_ids[0].to(args.device)
 
                 # --- optimization ---------------------------------------
-                soft_ids, curve, gnorm = optimize_prompt(
-                    model, init_ids, applier, args)
+                # --relax-rounding: upcast the model to fp32 for the soft
+                # stage so gradients survive in the bands where bf16
+                # activation rounding kills them. The fault stays the
+                # exact bf16 bit flip: FaultApplier's fp32 path mirrors
+                # the bf16 corruption value-for-value, and every fp32
+                # weight is an exact bf16 value, so the downcast is exact
+                # and verify_restore must pass bitwise.
+                if args.relax_rounding:
+                    model.to(torch.float32)
+                    opt_applier = FaultApplier(fault, "fp32")
+                    soft_ids, curve, gnorm = optimize_prompt(
+                        model, init_ids, opt_applier, args)
+                    model.to(torch.bfloat16)
+                    if not verify_restore(model, snapshot):
+                        raise RuntimeError("restore failed (relaxed opt)")
+                else:
+                    soft_ids, curve, gnorm = optimize_prompt(
+                        model, init_ids, applier, args)
                 h = free_run(model, soft_ids, args.m, eos)
                 applier.apply(model)
                 try:
@@ -256,24 +447,51 @@ def main():
                 d = first_divergence(h, f)
                 soft_detected = d is not None
                 soft_changed = int((soft_ids.cpu() != init_ids.cpu()).sum())
+                # a tie (margin == 0) detects only by argmax tie-breaking —
+                # knife-edge. Treat margin >= 0 as needing refinement even
+                # when the free-run verdict says detected.
+                soft_margin = first_token_margin(model, soft_ids, applier)[0]
+                needs_search = (not soft_detected) or soft_margin >= 0
 
                 # --- optional discrete refinement -----------------------
+                # Staged: gradient-guided HotFlip first (cheap, one backward
+                # per step ranks all substitutions), blind discrete search
+                # as fallback if HotFlip fails and --discrete-search is on.
                 search = {}
                 final_ids = soft_ids
-                if args.discrete_search and not soft_detected:
-                    t1 = time.time()
-                    final_ids, n_eval = discrete_search(
-                        model, soft_ids, applier, args, tokenizer)
-                    h = free_run(model, final_ids, args.m, eos)
+
+                def _verify(ids):
+                    h = free_run(model, ids, args.m, eos)
                     applier.apply(model)
                     try:
-                        f = free_run(model, final_ids, args.m, eos)
+                        f = free_run(model, ids, args.m, eos)
                     finally:
                         applier.undo(model)
                         if not verify_restore(model, snapshot):
                             raise RuntimeError("restore failed (search)")
-                    d2 = first_divergence(h, f)
-                    search = {"evaluated": n_eval,
+                    return first_divergence(h, f)
+
+                if needs_search and args.hotflip:
+                    t1 = time.time()
+                    final_ids, n_eval, n_flips = hotflip_search(
+                        model, soft_ids, applier, args, tokenizer,
+                        max_evals=args.search_max_evals)
+                    d2 = _verify(final_ids)
+                    search = {"method": "hotflip",
+                              "evaluated": n_eval, "flips": n_flips,
+                              "detected": d2 is not None,
+                              "first_divergence": d2,
+                              "seconds": round(time.time() - t1, 1)}
+                if needs_search \
+                        and not search.get("detected") \
+                        and args.discrete_search:
+                    t1 = time.time()
+                    final_ids, n_eval = discrete_search(
+                        model, soft_ids, applier, args, tokenizer,
+                        max_evals=args.search_max_evals)
+                    d2 = _verify(final_ids)
+                    search = {"method": "discrete",
+                              "evaluated": n_eval,
                               "detected": d2 is not None,
                               "first_divergence": d2,
                               "seconds": round(time.time() - t1, 1)}
@@ -289,6 +507,7 @@ def main():
                     "init_probe": init_idx,
                     "init_probe_dlogit": dlogit[init_idx],
                     "steps": args.steps, "objective": "margin",
+                    "relax_rounding": args.relax_rounding,
                     "gnorm_final": gnorm,
                     "loss_final": curve[-1]["loss"] if curve else None,
                     "soft_detected": soft_detected,
@@ -296,6 +515,9 @@ def main():
                     "soft_n_tokens_changed": soft_changed,
                     "soft_prompt_text": tokenizer.decode(
                         soft_ids, skip_special_tokens=True),
+                    "soft_first_token_margin": soft_margin,
+                    "final_first_token_margin": first_token_margin(
+                        model, final_ids, applier)[0],
                     "curve": curve,
                     "discrete_search": search or None,
                     "final_detected": (search.get("detected")

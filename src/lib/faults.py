@@ -29,6 +29,7 @@ Scopes:
 
 import hashlib
 import json
+import os
 
 import torch
 
@@ -51,10 +52,12 @@ class Fault:
     """A recorded set of bit flips, replayable on any model with the same
     parameter names and shapes."""
 
-    def __init__(self, k, scope, seed, flips):
+    def __init__(self, k, scope, seed, flips, rho=None):
         self.k = k            # requested flip count
         self.scope = scope
         self.seed = seed
+        self.rho = rho        # flip rate of the parent distribution, if the
+                              # fault was drawn from f_bitflip(rho)
         self.flips = sorted(flips)   # [[name, elem_idx, bit], ...]
         self.id = _fault_id(self.flips)
 
@@ -64,12 +67,16 @@ class Fault:
         return len(self.flips)
 
     def to_dict(self):
-        return {"id": self.id, "k": self.k, "scope": self.scope,
-                "seed": self.seed, "flips": self.flips}
+        d = {"id": self.id, "k": self.k, "scope": self.scope,
+             "seed": self.seed, "flips": self.flips}
+        if self.rho is not None:
+            d["rho"] = self.rho
+        return d
 
     @classmethod
     def from_dict(cls, d):
-        f = cls(d["k"], d["scope"], d["seed"], [tuple(x) for x in d["flips"]])
+        f = cls(d["k"], d["scope"], d["seed"], [tuple(x) for x in d["flips"]],
+                rho=d.get("rho"))
         assert f.id == d["id"], "fault id mismatch — corrupted record?"
         return f
 
@@ -128,6 +135,36 @@ def sample_fault(model, k, seed, scope="all"):
 def sample_faults(model, n, k, scope, seed0):
     """n independent faults with consecutive seeds (seed0 .. seed0+n-1)."""
     return [sample_fault(model, k, seed0 + i, scope) for i in range(n)]
+
+
+MANIFEST_PATH = os.path.join(os.path.dirname(__file__), "..", "..",
+                             "data", "fault_manifest.json")
+
+
+def load_manifest(path=MANIFEST_PATH, model_name=None):
+    """Reconstruct the frozen fault set from data/fault_manifest.json.
+    Deterministic fault definitions are the comparison's foundation; every
+    experiment loads its faults from here instead of re-sampling."""
+    with open(path) as f:
+        m = json.load(f)
+    if model_name is not None and m["model"] != model_name:
+        raise ValueError(f"manifest is for {m['model']}, not {model_name}")
+    faults = [Fault.from_dict(d) for d in m["faults"]]
+    # strata: k list (k-sweep), rho list (rho-sweep), or single k
+    strata = (m.get("rho") if isinstance(m.get("rho"), list)
+              else m["k"] if isinstance(m.get("k"), list) else [m["k"]])
+    assert len(faults) == len(strata) * len(m["scopes"]) * m["n_per_scope"]
+    return faults
+
+
+def manifest_meta(path=MANIFEST_PATH, model_name=None):
+    """The manifest dict (model, seed0, n_per_scope, scopes) without
+    reconstructing Fault objects."""
+    with open(path) as f:
+        m = json.load(f)
+    if model_name is not None and m["model"] != model_name:
+        raise ValueError(f"manifest is for {m['model']}, not {model_name}")
+    return m
 
 
 if __name__ == "__main__":
