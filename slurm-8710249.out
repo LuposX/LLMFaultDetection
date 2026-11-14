@@ -1,0 +1,37 @@
+== repo root: /pfs/data6/home/ka/ka_stud/ka_uynqx/LLMFaultDetection
+== job 8710249 on uc2n610.localdomain, 1 logical cores
+Python 3.12.3
+== shard 10/32 of config experiments_cluster_hotflip.yaml
+[1/1] hotflip_cluster_128: RUN
+  /home/ka/ka_stud/ka_uynqx/atpg-venv/bin/python src/run_hotflip_baseline.py --model Qwen/Qwen3-0.6B --scopes mantissa,exponent --seed0 40 --faults 4 --out results/exp_hotflip.jsonl.shard10 --hf-starts 8 --hf-steps 150 --hf-width 4 --budget-rows 25600 --m 32
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+mantissa seed= 40 fault=fda44d4ba440 hotflip=no d=None starts=8 rows=556 (252.8s)
+mantissa seed= 41 fault=43575f2a70aa hotflip=DET d=0 starts=2 rows=206 (55.8s)
+mantissa seed= 42 fault=db30ebec63d2 hotflip=no d=None starts=8 rows=556 (246.2s)
+mantissa seed= 43 fault=9e27137a7d1f hotflip=DET d=0 starts=2 rows=206 (56.1s)
+exponent seed= 40 fault=811f8ab46336 hotflip=DET d=0 starts=1 rows=136 (32.4s)
+exponent seed= 41 fault=5792de2b3cf8 hotflip=DET d=12 starts=1 rows=70 (26.5s)
+exponent seed= 42 fault=2be23d7b0b22 hotflip=no d=None starts=8 rows=556 (249.1s)
+exponent seed= 43 fault=e583c5d93590 hotflip=DET d=0 starts=1 rows=66 (10.7s)
+total: 2352 row-equivalents, platform cpu
+  done -> results/exp_hotflip.jsonl.shard10
+  ... total: 2352 row-equivalents, platform cpu
+== shard done; merge after all tasks with:
+    python src/run_experiments.py --config experiments_cluster_hotflip.yaml --merge
+== done
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc2n610
+Job ID: 8710249
+Array Job ID: 8710233_10
+Cluster: uc3
+User/Group: ka_uynqx/ka_stud
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 8
+CPU Utilized: 02:02:34
+CPU Efficiency: 86.97% of 02:20:56 core-walltime
+Job Wall-clock time: 00:17:37
+Memory Utilized: 11.31 GB
+Memory Efficiency: 47.11% of 24.00 GB (24.00 GB/node)

@@ -1,0 +1,21 @@
+== repo root: /pfs/data6/home/ka/ka_stud/ka_uynqx/LLMFaultDetection
+== job 8710233 on uc2n685.localdomain, 1 logical cores
+Python 3.12.3
+== shard 31/32 of config experiments_cluster_hotflip.yaml
+[1/1] hotflip_cluster_128: RUN
+  /home/ka/ka_stud/ka_uynqx/atpg-venv/bin/python src/run_hotflip_baseline.py --model Qwen/Qwen3-0.6B --scopes mantissa,exponent --seed0 124 --faults 4 --out results/exp_hotflip.jsonl.shard31 --hf-starts 8 --hf-steps 150 --hf-width 4 --budget-rows 25600 --m 32
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+mantissa seed=124 fault=6cc302fbc553 hotflip=no d=None starts=8 rows=556 (223.9s)
+mantissa seed=125 fault=dc91936733a5 hotflip=DET d=11 starts=2 rows=138 (39.9s)
+mantissa seed=126 fault=908548acac09 hotflip=no d=None starts=8 rows=556 (220.5s)
+mantissa seed=127 fault=47cd81137051 hotflip=DET d=0 starts=8 rows=560 (237.9s)
+exponent seed=124 fault=3f1ecce18f8e hotflip=DET d=19 starts=1 rows=74 (35.2s)
+exponent seed=125 fault=f703a1bde93d hotflip=DET d=17 starts=2 rows=144 (55.9s)
+exponent seed=126 fault=edcbca67dfa9 hotflip=no d=None starts=8 rows=556 (220.6s)
+exponent seed=127 fault=ce83d3d7f8e4 hotflip=DET d=21 starts=1 rows=74 (35.3s)
+total: 2658 row-equivalents, platform cpu
+  done -> results/exp_hotflip.jsonl.shard31
+  ... total: 2658 row-equivalents, platform cpu
+== shard done; merge after all tasks with:
+    python src/run_experiments.py --config experiments_cluster_hotflip.yaml --merge
+== done
