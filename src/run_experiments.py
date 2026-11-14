@@ -155,6 +155,7 @@ def main():
         if (exists and not args.force) or args.dry_run:
             continue
         log_path = out_path + ".log"
+        os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
         with open(log_path, "w") as log:
             # tee: child output goes to the log AND the terminal, so a long
             # run is visibly alive instead of silent for hours

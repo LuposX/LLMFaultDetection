@@ -18,17 +18,24 @@ candidate verifications x 2 rows.
 
 FLOPs accounting: alongside row-equivalents, the counter estimates FLOPs
 analytically. Forward passes cost 2*P FLOPs per token, where P is the
-number of non-embedding weight elements (Qwen3-0.6B: P = 596,049,920); a
-backward pass costs twice the forward cost of the computation graph it
-traverses, so callers pass the graph's forward token count to
-add_backward(). Attention and embedding lookups are neglected (at the
-64-token contexts used here they are below 1 percent of the total).
+number of weight elements of Qwen3-0.6B including the tied output
+embedding (P = 596,049,920: the lm_head projection runs once per
+generated token and is charged, while the embedding lookup is a gather
+with no FLOPs); a backward pass costs twice the forward cost of the
+computation graph it traverses, so callers pass the graph's forward
+token count to add_backward(). Attention score products are neglected:
+at a 64-token context they are 1.2 percent of the forward cost (2 x 2 x
+16 heads x 128 head_dim x 28 layers x s FLOPs per token at context s,
+against 1.19e9 FLOPs of weight products), less on average during
+decoding since the context grows from the prompt length.
 """
 
 import torch
 
-# non-embedding weight elements of Qwen3-0.6B (embedding lookup performs no
-# matmul, so embedding weights are excluded from the FLOPs estimate)
+# weight elements of Qwen3-0.6B, including the tied output embedding
+# (155,582,464); non-embedding weights are 440,401,920. The lm_head
+# projection runs once per generated token and is charged; the embedding
+# lookup is a gather with no FLOPs.
 QWEN3_0P6B_PARAMS = 596_049_920
 
 

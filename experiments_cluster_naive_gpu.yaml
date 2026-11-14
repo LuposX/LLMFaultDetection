@@ -1,0 +1,80 @@
+# Naive optimized patterns (report section 2.5) on the cluster GPU partition.
+#
+# Same protocol as the desktop pattern-budget runs: 385 faults per class
+# (seeds: all -> the full manifest), R = 5 independently drawn start sets
+# per fault (shared across faults within a repeat), forward-only top-k
+# substitution search on the real bf16 decode, verification on the same
+# 64-token window as the random baseline. Generation budget matched to the
+# HotFlip runs (13,000 row-equivalents per fault).
+#
+# Platform note: the CPU cluster partition was ruled out by calibration
+# (0.5 rows/s single-thread bf16 on cpu_il; the campaign needs orders of
+# magnitude more). These rows are cluster GPU (H100); desktop rows are
+# GPU (RX 9070). Records carry a platform tag; the cross-platform check
+# must cover the pair the table mixes.
+#
+# Budget semantics (run_hotflip_baseline.py): the 13,000-row budget is
+# shared per fault across all n starts AND all 5 repeats (checked between
+# starts), so n=8 costs about the same worst case as n=1. Detected faults
+# cost ~250-500 rows per repeat; undetected faults run to the cap.
+#
+# Submit (partition/gres override the sbatch header of run_experiments.sh;
+# walltime sized after calibration):
+#   CONFIG=experiments_cluster_naive_gpu.yaml sbatch --partition=gpu_h100_il \
+#     --gres=gpu:1 --array=0-31 hpc/run_experiments.sh
+# Merge afterwards (login node or tiny job):
+#   python src/run_experiments.py \
+#     --config experiments_cluster_naive_gpu.yaml --merge
+
+experiments:
+  - name: naive_budget_n1_gpu
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n1.jsonl
+    args:
+      hf-starts: 1
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200
+
+  - name: naive_budget_n2_gpu
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n2.jsonl
+    args:
+      hf-starts: 2
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200
+
+  - name: naive_budget_n4_gpu
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n4.jsonl
+    args:
+      hf-starts: 4
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200
+
+  - name: naive_budget_n8_gpu
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n8.jsonl
+    args:
+      hf-starts: 8
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200
