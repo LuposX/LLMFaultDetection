@@ -1,0 +1,48 @@
+# Naive optimized patterns (report section 2.5) on the CPU cluster.
+#
+# Same protocol as the desktop pattern-budget runs: 385 faults per class
+# (seeds: all -> the full manifest), R = 5 independently drawn start sets
+# per fault (shared across faults within a repeat), forward-only top-k
+# substitution search on the real bf16 decode, verification on the same
+# 64-token window as the random baseline. Generation budget matched to the
+# HotFlip runs (13,000 row-equivalents per fault).
+#
+# Platform note: cluster runs are CPU (bf16 decode, thread-pinned for
+# bitwise reproducibility); desktop runs are GPU. The cross-platform
+# equivalence check should confirm the decode agrees before these rows
+# share a table with GPU rows.
+#
+# Submit (32 shards keeps the worst-case fault at ~77 min inside the 8 h
+# task limit; per-fault cost is typically far below the budget cap):
+#   CONFIG=experiments_cluster_naive_budget.yaml SHARDS=32 \
+#     sbatch --array=0-31 hpc/run_experiments.sh
+# Merge afterwards (login node or tiny job):
+#   python src/run_experiments.py \
+#     --config experiments_cluster_naive_budget.yaml --merge
+
+experiments:
+  - name: naive_budget_n1_cluster
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n1.jsonl
+    args:
+      hf-starts: 1
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200
+
+  - name: naive_budget_n2_cluster
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n2.jsonl
+    args:
+      hf-starts: 2
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200

@@ -6,15 +6,15 @@
 # confidence, enough to resolve ~10-point coverage differences).
 # Extending to more seeds later is additive: rerun with a larger range.
 #
-# Budget: 25,600 row-equivalents = median B1 spend per fault, measured
-# from the current exp_random.jsonl records (worst case; detected and
-# silent faults exit earlier). Re-pin after B1 finishes if the median
-# moves.
+# Budget: 6,400 row-equivalents per fault = B1's measured per-fault spend
+# (100 faulty probes at batch 8; constant across all 762 decoded faults in
+# exp_random.jsonl). NOTE: the first cluster campaign ran with 25,600
+# (an over-generous cap from a cumulative-vs-delta calibration slip); its
+# records carry per-start rows, so matched-budget analysis is done post
+# hoc by truncating each fault's start walk at 6,400 row-equivalents.
 #
-# Sizing (measured 2.8 row-equiv/s per 8-core task, 2.6 h worst case per
-# fault): 16 shards -> 16 faults/task -> <=42 h; 32 shards -> 8
-# faults/task -> <=21 h. Both fit the 72 h cpu_il limit. Memory: 24 GB
-# per task, ~9.4 GB peak RSS observed; ~8 tasks fit per node.
+# Sizing (measured 2.8 row-equiv/s per 8-core task): at 6,400 rows the
+# worst case per fault is ~40 min; the 25,600 cap bounds a fault at ~2.6 h.
 #
 # Submit:
 #   CONFIG=experiments_cluster_hotflip.yaml SHARDS=16 \
@@ -33,5 +33,5 @@ experiments:
       hf-starts: 8
       hf-steps: 150
       hf-width: 4
-      budget-rows: 25600
+      budget-rows: 6400
       m: 32

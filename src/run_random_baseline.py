@@ -15,14 +15,22 @@ composition. The batch here is the probe subset (default 100 prompts in
 probes whose margin sits at a bf16 tie. Cross-method comparisons are
 unaffected because every method shares this decode path.
 
-Output: one JSONL record per fault with the per-prompt detection vector,
-same shape as results/fault_coverage.jsonl.
+Pattern-budget mode (--n-patterns N --repeats R): instead of decoding all
+100 probes, R independent random N-subsets of the probe pool are drawn
+(shared across all faults, so the healthy reference is decoded once per
+subset) and every fault is decoded on each subset. Each subset gets its
+own cache keys — the batch composition of a genuine N-pattern decode
+differs from the 100-probe run, and bf16 ties may resolve differently,
+so cached 100-probe decodes must not be reused. One JSONL record is
+written per (fault, repeat) with the subset, its draw seed, and the
+per-pattern detection vector.
 """
 
 import argparse
 import hashlib
 import json
 import os
+import random
 import sys
 import time
 from collections import defaultdict
@@ -40,6 +48,94 @@ from lib.loading import load_model  # noqa: E402
 
 MODEL_ID = "Qwen/Qwen3-0.6B"
 
+
+def run_budget_mode(args, prompts, pf_hash, faults, scopes):
+    """Pattern-budget mode: R random n-subsets, all faults on each subset."""
+    model, tokenizer = load_model(args.model, args.device)
+    snapshot = snapshot_weights(model)
+    cache = Cache(args.cache)
+    counter = ComputeCounter()
+    counter.attach(model)
+    base_key = (args.model, args.max_new_tokens, args.batch, pf_hash)
+
+    os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
+    new_file = not os.path.exists(args.out)
+    with open(args.out, "a") as out:
+        for r in range(args.repeats):
+            rng = random.Random(args.subset_seed + r)
+            subset = sorted(rng.sample(range(len(prompts)), args.n_patterns))
+            sub_hash = hashlib.sha1(
+                json.dumps(subset).encode()).hexdigest()[:8]
+            sub_prompts = [prompts[i] for i in subset]
+            print(f"== repeat {r + 1}/{args.repeats}: subset {sub_hash} "
+                  f"{subset} — healthy reference", flush=True)
+            healthy, h_new = decode_with_cache(
+                model, tokenizer, sub_prompts,
+                [(*base_key, "healthy", f"n{args.n_patterns}", f"r{r}",
+                  sub_hash, i) for i in range(len(sub_prompts))],
+                cache, args.max_new_tokens, args.batch, args.device)
+            print(f"   healthy: {h_new} fresh, "
+                  f"{len(sub_prompts) - h_new} cached", flush=True)
+            bar = tqdm(faults, desc=f"faults r{r}", unit="fault",
+                       dynamic_ncols=True)
+            for fault in bar:
+                t0 = time.time()
+                c0 = counter.as_dict()
+                faulty, n_new = decode_with_cache(
+                    model, tokenizer, sub_prompts,
+                    [(*base_key, "faulty", fault.id, f"n{args.n_patterns}",
+                      f"r{r}", sub_hash, i) for i in range(len(sub_prompts))],
+                    cache, args.max_new_tokens, args.batch, args.device,
+                    corrupt=fault, snapshot=snapshot)
+                detected = [h != f for h, f in zip(healthy, faulty)]
+                record = {
+                    "model": args.model, "scope": fault.scope,
+                    "seed": fault.seed, "fault": fault.to_dict(),
+                    "method": "random-budget",
+                    "n_patterns": args.n_patterns, "repeat": r,
+                    "subset": subset, "subset_seed": args.subset_seed + r,
+                    "subset_hash": sub_hash,
+                    "n_probes": len(sub_prompts), "max_new_tokens":
+                        args.max_new_tokens, "batch": args.batch,
+                    "manifest": args.manifest,
+                    "detected": detected, "n_detected": sum(detected),
+                    "n_new_decodes": n_new,
+                    "platform": platform_tag(),
+                    "compute": {k: counter.as_dict()[k] - c0[k]
+                                for k in ("forward_calls", "rows",
+                                          "context_tokens", "backwards",
+                                          "row_equiv", "flops")},
+                    "elapsed_s": round(time.time() - t0, 1),
+                }
+                out.write(json.dumps(record) + "\n")
+                out.flush()
+                bar.set_postfix_str(
+                    f"{fault.scope} {fault.seed:3d} "
+                    f"{record['n_detected']}/{len(sub_prompts)} "
+                    f"[{'all cached' if n_new == 0 else f'{n_new} new'}]")
+
+    # summary: coverage per repeat and pooled over repeats, per scope
+    recs = [json.loads(l) for l in open(args.out)]
+    recs = [x for x in recs if x.get("method") == "random-budget"]
+    groups = defaultdict(list)
+    for x in recs:
+        groups[(x["n_patterns"], x["repeat"], x["scope"])].append(x)
+    print("== summary (coverage per repeat):", flush=True)
+    for n_pat in sorted({g[0] for g in groups}):
+        for scope in scopes:
+            reps = [groups[(n_pat, r, scope)] for r in range(args.repeats)]
+            covs = [sum(any(x["detected"]) for x in rep) / len(rep)
+                    for rep in reps]
+            pooled = [x for rep in reps for x in rep]
+            pcov = sum(any(x["detected"]) for x in pooled) / len(pooled)
+            print(f"  n={n_pat:3d} {scope:8s}: "
+                  f"{' | '.join(f'{c:.1%}' for c in covs)} "
+                  f"-> pooled {pcov:.1%} ({len(pooled)} fault-repeats)",
+                  flush=True)
+    tot = counter.as_dict()
+    print(f"total: {tot['row_equiv']} row-equivalents, "
+          f"{tot['flops'] / 1e12:.1f} TFLOP (estimated), "
+          f"platform {platform_tag()['device']}", flush=True)
 
 def decode_with_cache(model, tokenizer, prompts, keys, cache, max_new_tokens,
                       batch, device, corrupt=None, snapshot=None):
@@ -74,6 +170,15 @@ def main():
     ap.add_argument("--faults", type=int, default=20,
                     help="number of faults per scope (seeds seed0..)")
     ap.add_argument("--n-probes", type=int, default=100)
+    ap.add_argument("--n-patterns", type=int, default=None,
+                    help="pattern budget n: decode only a random n-subset "
+                         "of the probe pool (pattern-budget mode)")
+    ap.add_argument("--repeats", type=int, default=1,
+                    help="pattern-budget mode: number of independently "
+                         "drawn n-subsets evaluated per fault")
+    ap.add_argument("--subset-seed", type=int, default=0,
+                    help="pattern-budget mode: base seed for the subset "
+                         "draws (subset r uses seed + r)")
     ap.add_argument("--manifest", default="data/fault_manifest.json",
                     help="frozen fault set (use fault_manifest_k_sweep.json "
                          "for the flip-multiplicity sweep)")
@@ -101,6 +206,11 @@ def main():
         json.dumps([p["prompt"] for p in prompt_lines]).encode()
     ).hexdigest()[:8]
 
+    budget_mode = args.n_patterns is not None
+    if budget_mode:
+        assert 1 <= args.n_patterns <= len(prompts), "--n-patterns out of range"
+        assert args.repeats >= 1, "--repeats must be >= 1"
+
     faults = [f for f in load_manifest(path=args.manifest,
                                        model_name=args.model)
               if f.scope in scopes
@@ -110,6 +220,11 @@ def main():
         faults = [f for f in faults if f.k in k_sub]
     assert faults, "no manifest faults match --scopes/--seed0/--faults/--rhos"
     k_vals = sorted({f.k for f in faults})
+
+    if budget_mode:
+        run_budget_mode(args, prompts, pf_hash, faults, scopes)
+        return
+
     print(f"== stage 1/2: healthy reference ({len(prompts)} prompts, "
           f"batch {args.batch})", flush=True)
 
@@ -138,6 +253,7 @@ def main():
         bar = tqdm(faults, desc="faults", unit="fault", dynamic_ncols=True)
         for fault in bar:
             t0 = time.time()
+            c0 = counter.as_dict()   # per-fault compute delta baseline
             faulty, n_new = decode_with_cache(
                 model, tokenizer, prompts,
                 [(*base_key, "faulty", fault.id, i)
@@ -153,7 +269,10 @@ def main():
                 "manifest": args.manifest,
                 "detected": detected, "n_detected": sum(detected),
                 "n_new_decodes": n_new,
-                "compute": counter.as_dict(),
+                "compute": {k: counter.as_dict()[k] - c0[k]
+                            for k in ("forward_calls", "rows",
+                                      "context_tokens", "backwards",
+                                      "row_equiv", "flops")},
                 "elapsed_s": round(time.time() - t0, 1),
             }
             out.write(json.dumps(record) + "\n")

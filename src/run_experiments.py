@@ -45,6 +45,7 @@ from lib.faults import manifest_meta  # noqa: E402
 METHODS = {
     "random": ("src/run_random_baseline.py", []),
     "hotflip": ("src/run_hotflip_baseline.py", []),
+    "naive": ("src/run_hotflip_baseline.py", ["--search", "discrete"]),
     "pattern_comparison": ("src/run_pattern_comparison.py", []),
     "pattern_set": ("src/run_pattern_set.py", []),
 }

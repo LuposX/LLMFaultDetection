@@ -205,7 +205,9 @@ def hotflip_search(model, disc, applier, args, tokenizer, max_evals=None,
             loss = margin_loss(healthy[-1], faulty[-1], args.margin)
             g = torch.autograd.grad(loss, dists)[0]          # [L, V]
             if counter is not None:
-                counter.add_backward()
+                # ranking graph = two forward passes over the same L-token
+                # sequence, so the backward traverses 2*L forward tokens
+                counter.add_backward(tokens=2 * L)
         finally:
             model.to(torch.bfloat16)
             for n, p in unique_parameters(model):
