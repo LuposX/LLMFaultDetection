@@ -31,9 +31,11 @@ import hashlib
 import json
 import os
 
-import torch
+# NOTE: torch is imported lazily inside the functions that need it. The
+# module-level import used to segfault plain `import torch` on the
+# bwUniCluster LOGIN nodes (compute nodes were fine), which broke purely
+# file-based operations like `run_experiments.py --merge` there.
 
-from .inject import unique_parameters
 
 _SCOPES = {
     "all": list(range(16)),
@@ -41,6 +43,18 @@ _SCOPES = {
     "exponent": list(range(7, 15)),
     "sign": [15],
 }
+
+
+def _param_map(model):
+    """(name, param) for the model's unique leaf parameters, via lib.inject.
+    Both torch and lib.inject are imported lazily here: this module's file-level
+    API (manifest loading, fault ids, metadata) must work without torch — the
+    bwUniCluster login nodes segfault on `import torch` (compute nodes are
+    fine), which used to break `run_experiments.py --merge` there."""
+    import torch
+    from .inject import unique_parameters
+
+    return unique_parameters(model)
 
 
 def _fault_id(flips):
@@ -83,7 +97,9 @@ class Fault:
     def _xor(self, model):
         """XOR every recorded bit in place. apply() and undo() both call
         this: flipping the same bits twice returns the original weights."""
-        by_name = {name: p for name, p in unique_parameters(model)}
+        import torch
+
+        by_name = {name: p for name, p in _param_map(model)}
         for name, elem, bit in self.flips:
             param = by_name[name]
             assert param.data.is_contiguous(), f"{name} not contiguous"
@@ -112,7 +128,9 @@ def sample_fault(model, k, seed, scope="all"):
     zero event, handled for correctness only.
     """
     assert scope in _SCOPES, f"unknown scope {scope}"
-    params = [(name, p) for name, p in unique_parameters(model)]
+    import torch
+
+    params = [(name, p) for name, p in _param_map(model)]
     assert all(p.element_size() == 2 for _, p in params), \
         "bit layout assumes 16-bit elements (bf16)"
     sizes = torch.tensor([p.numel() for _, p in params])

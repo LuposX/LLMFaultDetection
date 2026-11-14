@@ -1,0 +1,91 @@
+# Pattern-budget experiments (results table of reports/experiment-report.typ).
+# Run:    python src/run_experiments.py --config experiments_pattern_budget.yaml
+# Inspect: python src/run_experiments.py --config experiments_pattern_budget.yaml --dry-run
+#
+# Real runs for the (method, n) cells of the report table — no derived or
+# truncated values. 385 faults per class (manifest), R = 5 independently
+# drawn pattern budgets per fault; draws are shared across faults within a
+# repeat. HotFlip uses random start sampling and the same 64-token
+# verification window as the random baseline, so the detection criterion is
+# identical. The queue runner skips entries whose output file already
+# exists; delete the file to redo an experiment.
+#
+# Outputs land in results/pattern_budget/ (see its README). Aggregate with:
+#   python src/aggregate_pattern_budget.py --out results/pattern_budget/summary.json
+
+common:
+  model: Qwen/Qwen3-0.6B
+
+experiments:
+  - name: random_budget_n1
+    method: random
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/random_n1.jsonl
+    args:
+      n-patterns: 1
+      repeats: 5
+
+  - name: hotflip_budget_n1
+    method: hotflip
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/hotflip_n1.jsonl
+    args:
+      hf-starts: 1
+      start-sampling: random
+      repeats: 5
+      m: 64
+
+  - name: random_budget_n2
+    method: random
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/random_n2.jsonl
+    args:
+      n-patterns: 2
+      repeats: 5
+
+  - name: hotflip_budget_n2
+    method: hotflip
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/hotflip_n2.jsonl
+    args:
+      hf-starts: 2
+      start-sampling: random
+      repeats: 5
+      m: 64
+
+  # Naive optimized patterns (report section 2.5): the same protocol and
+  # start pool as the HotFlip runs, but the edit step is the forward-only
+  # top-k substitution search on the real bf16 decode — no gradient
+  # ranking. Generation budget identical to HotFlip (13000 row-equivalents
+  # per fault, twice the random baseline's 100-pattern sweep) so the three
+  # search-based rows are budget-matched; measured generation cost goes
+  # into the table regardless.
+  - name: naive_budget_n1
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n1.jsonl
+    args:
+      hf-starts: 1
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200
+
+  - name: naive_budget_n2
+    method: naive
+    scopes: [mantissa, exponent]
+    seeds: all
+    out: results/pattern_budget/naive_n2.jsonl
+    args:
+      hf-starts: 2
+      start-sampling: random
+      repeats: 5
+      m: 64
+      budget-rows: 13000
+      search-max-evals: 200
