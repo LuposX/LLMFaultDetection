@@ -124,9 +124,10 @@ fault is evaluated
 R = 5 times with independently drawn pattern budgets (random n-subsets of
 the 100 patterns for the random baseline, randomly drawn start patterns for
 the search), so the per-fault detection rate measures the variance across
-pattern draws. Coverage is pooled over both fault classes and over the
-repeats, with 95 percent confidence intervals; the best method per budget
-is set in bold.
+pattern draws. Test coverage is the pooled detection rate over both fault
+classes and over the repeats, with 95 percent confidence intervals; the
+per-fault detection rate is the fraction of faults detected in at least
+one of the R repeats. The best method per budget is set in bold.
 
 #table(
   columns: (auto, auto, auto, auto, auto, auto),
@@ -140,12 +141,12 @@ is set in bold.
   [*generation cost*],
   [*usage cost*],
   table.hline(y: 1, stroke: 0.5pt),
-  [search], [1], [tbd], [tbd], [tbd], [tbd],
-  [random], [1], [tbd], [tbd], [–], [tbd],
+  [search], [1], [#strong[30.1% (28.6–31.5)]], [60.9%], [0.08], [0.08],
+  [random], [1], [23.4% (22.1–24.8)], [60.9%], [–], [0.08],
   [optimized], [1], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
-  [search], [2], [tbd], [tbd], [tbd], [tbd],
-  [random], [2], [tbd], [tbd], [–], [tbd],
+  [search], [2], [#strong[46.6% (45.1–48.2)]], [68.7%], [0.16], [0.15],
+  [random], [2], [44.6% (43.1–46.2)], [69.2%], [–], [0.15],
   [optimized], [2], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
   [search], [4], [tbd], [tbd], [tbd], [tbd],
@@ -179,9 +180,25 @@ same 64-token window). Costs are reported in FLOPs,#footnote[
   of the forward cost at the 64-token contexts used here, and the
   embedding lookup, which performs no multiply-accumulate, are
   neglected.] and generation cost is zero for the random baseline because
-its patterns are taken as-is. The rows marked tbd are filled by the
-pattern-budget experiments of the next step; the search was not run with
-budgets above 8.
+  its patterns are taken as-is; both costs are medians per fault-repeat,
+  reported in teraFLOPs (usage cost is the verification decode, one
+  64-token decode per evaluated pattern; the healthy reference is decoded
+  once per draw and shared). The rows marked tbd are filled by the
+  remaining pattern-budget experiments (budgets 4 and 8, naive rows on the
+  cluster GPU); the search was not run with budgets above 8.
+
+At equal budget the search raises the pooled detection rate over the
+random baseline at n = 1 (30.1 against 23.4 percent) but adds little at
+n = 2 (46.6 against 44.6 percent), where a second independent pattern
+recovers most of the gain. The per-fault detection rates make the reason
+visible: both methods reach almost the same fault populations (60.9
+percent of faults at n = 1 for either method, with 53 faults covered only
+by the random draw and 53 only by the optimized pattern; the pattern draws
+are shared between the two methods by construction), so the optimization
+raises the probability per draw rather than the number of reachable
+faults. The search spend stays far below its 13,000 row-equivalent budget
+(median 132 and 264 row-equivalents per fault-repeat at n = 1 and 2), so
+the reported gains are not produced by unequal compute.
 
 = Next steps
 

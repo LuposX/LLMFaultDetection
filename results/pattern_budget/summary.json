@@ -1,0 +1,86 @@
+{
+  "hotflip_n1": {
+    "faults": 770,
+    "repeats": 5,
+    "scopes": [
+      "exponent",
+      "mantissa"
+    ],
+    "coverage_pooled": 0.3005194805194805,
+    "wilson_lo": 0.2862414718943784,
+    "wilson_hi": 0.31519518289703813,
+    "coverage_per_repeat": [
+      0.3,
+      0.2649350649350649,
+      0.45454545454545453,
+      0.24155844155844156,
+      0.24155844155844156
+    ],
+    "mean_per_fault_rate": 0.3005194805194805,
+    "median_row_equiv": 132,
+    "median_flops_est": 793938493440
+  },
+  "hotflip_n2": {
+    "faults": 770,
+    "repeats": 5,
+    "scopes": [
+      "exponent",
+      "mantissa"
+    ],
+    "coverage_pooled": 0.4664935064935065,
+    "wilson_lo": 0.45077610086354053,
+    "wilson_hi": 0.4822777122459552,
+    "coverage_per_repeat": [
+      0.36363636363636365,
+      0.34025974025974026,
+      0.5506493506493506,
+      0.5,
+      0.577922077922078
+    ],
+    "mean_per_fault_rate": 0.46649350649350646,
+    "median_row_equiv": 264,
+    "median_flops_est": 1566419189760
+  },
+  "random-budget_n1": {
+    "faults": 770,
+    "repeats": 5,
+    "scopes": [
+      "exponent",
+      "mantissa"
+    ],
+    "coverage_pooled": 0.23402597402597403,
+    "wilson_lo": 0.22092103571231583,
+    "wilson_hi": 0.24766117067623936,
+    "coverage_per_repeat": [
+      0.2987012987012987,
+      0.5558441558441558,
+      0.13636363636363635,
+      0.08961038961038961,
+      0.08961038961038961
+    ],
+    "mean_per_fault_rate": 0.23402597402597405,
+    "median_row_equiv": 64,
+    "median_flops_est": 139475681280
+  },
+  "random-budget_n2": {
+    "faults": 770,
+    "repeats": 5,
+    "scopes": [
+      "exponent",
+      "mantissa"
+    ],
+    "coverage_pooled": 0.4464935064935065,
+    "wilson_lo": 0.43085114688663523,
+    "wilson_hi": 0.4622425391641874,
+    "coverage_per_repeat": [
+      0.2922077922077922,
+      0.5987012987012987,
+      0.38441558441558443,
+      0.6480519480519481,
+      0.3090909090909091
+    ],
+    "mean_per_fault_rate": 0.4464935064935065,
+    "median_row_equiv": 128,
+    "median_flops_est": 281335562240
+  }
+}
