@@ -138,8 +138,8 @@ one of the R repeats. The best method per budget is set in bold.
   [*n*],
   [*test coverage*],
   [*per-fault detection rate*],
-  [*generation cost*],
-  [*usage cost*],
+  [*generation cost (TFLOP)*],
+  [*usage cost (TFLOP)*],
   table.hline(y: 1, stroke: 0.5pt),
   [search], [1], [#strong[30.1% (28.6–31.5)]], [60.9%], [0.08], [0.08],
   [random], [1], [23.4% (22.1–24.8)], [60.9%], [–], [0.08],
@@ -180,12 +180,12 @@ same 64-token window). Costs are reported in FLOPs,#footnote[
   of the forward cost at the 64-token contexts used here, and the
   embedding lookup, which performs no multiply-accumulate, are
   neglected.] and generation cost is zero for the random baseline because
-  its patterns are taken as-is; both costs are medians per fault-repeat,
-  reported in teraFLOPs (usage cost is the verification decode, one
-  64-token decode per evaluated pattern; the healthy reference is decoded
-  once per draw and shared). The rows marked tbd are filled by the
-  remaining pattern-budget experiments (budgets 4 and 8, naive rows on the
-  cluster GPU); the search was not run with budgets above 8.
+its patterns are taken as-is; both costs are medians per fault-repeat
+(usage cost is the verification decode, one
+64-token decode per evaluated pattern; the healthy reference is decoded
+once per draw and shared). The rows marked tbd are filled by the
+remaining pattern-budget experiments (budgets 4 and 8, naive rows on the
+cluster GPU); the search was not run with budgets above 8.
 
 At equal budget the search raises the pooled detection rate over the
 random baseline at n = 1 (30.1 against 23.4 percent) but adds little at
