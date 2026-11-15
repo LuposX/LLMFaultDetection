@@ -6,8 +6,8 @@
 #SBATCH --cpus-per-task=8            # experiments run sequentially per task
 #SBATCH --mem=24G                    # bf16 weights 1.2G, fp32 relax ~2.5G
 #SBATCH --time=08:00:00
-#SBATCH --output=slurm-%j.out
-#SBATCH --error=slurm-%j.err
+#SBATCH --output=slurm-%j_%a.out
+#SBATCH --error=slurm-%j_%a.err
 
 # Generic experiment runner for bwUniCluster: executes the YAML experiment
 # queue (src/run_experiments.py) on the frozen manifest fault set.
