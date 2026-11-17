@@ -196,8 +196,12 @@ percent of faults at n = 1 for either method, with 53 faults covered only
 by the random draw and 53 only by the optimized pattern; the pattern draws
 are shared between the two methods by construction), so the optimization
 raises the probability per draw rather than the number of reachable
-faults. The search spend stays far below its 13,000 row-equivalent budget
-(median 132 and 264 row-equivalents per fault-repeat at n = 1 and 2), so
+faults. At budget 4 the two methods are statistically
+indistinguishable (60.0 against 59.8 percent, overlapping intervals),
+confirming that the optimization only pays for the first pattern. The
+search spend stays far below its 13,000 row-equivalent budget
+(median 132, 264 and 398 row-equivalents per fault-repeat at n = 1, 2
+and 4), so
 the reported gains are not produced by unequal compute.
 
 = Next steps
