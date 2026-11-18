@@ -154,7 +154,7 @@ one of the R repeats. The best method per budget is set in bold.
   [optimized], [4], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
   [search], [8], [tbd], [tbd], [tbd], [tbd],
-  [random], [8], [tbd], [tbd], [–], [tbd],
+  [random], [8], [69.4% (67.9–70.8)], [100%], [–], [0.61],
   [optimized], [8], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
   [random], [32], [tbd], [tbd], [–], [tbd],
