@@ -206,6 +206,35 @@ search spend stays far below its 13,000 row-equivalent budget
 and 4), so
 the reported gains are not produced by unequal compute.
 
+== Preliminary: the naive optimizer against the random baseline
+
+The first two tasks of the cluster array job (2 of 96) returned 80
+fault-repeats per budget, covering seeds 0 to 7 of both classes at all
+five repeats. The table below compares the naive optimizer against the
+random baseline on these same cells. The numbers are preliminary: they
+cover 2 percent of the grid and only low seeds.
+
+#table(
+  columns: (auto, auto, auto),
+  align: (center, center, center),
+  table.hline(stroke: 0.8pt),
+  [*budget n*], [*random*], [*naive*],
+  table.hline(stroke: 0.5pt),
+  [1], [26.2%], [67.5%],
+  [2], [60.0%], [81.2%],
+  [4], [75.0%], [81.2%],
+  [8], [81.2%], [81.2%],
+  table.hline(y: 5, stroke: 0.8pt),
+)
+
+The naive optimizer is ahead of the random baseline at every budget, in
+contrast to the gradient search, which falls behind from budget 2 on.
+At budget 1 the optimized pattern detects 41 points more faults than a
+random draw. The rates saturate from budget 2: the per-cell outcomes are
+identical for budgets 2, 4 and 8, so additional starts detect nothing
+new on these faults. The full comparison follows once the array job has
+drained.
+
 == Faults invisible to the probe set
 
 206 of the 770 faults (113 mantissa, 93 exponent) produced identical
