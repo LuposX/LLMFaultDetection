@@ -153,8 +153,8 @@ one of the R repeats. The best method per budget is set in bold.
   [random], [4], [#strong[60.0% (58.5–61.6)]], [71.7%], [–], [0.31],
   [optimized], [4], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
-  [search], [8], [tbd], [tbd], [tbd], [tbd],
-  [random], [8], [69.4% (67.9–70.8)], [100%], [–], [0.61],
+  [search], [8], [68.7% (67.2–70.1)], [72.5%], [0.48], [0.61],
+  [random], [8], [#strong[69.4% (67.9–70.8)]], [#strong[100%]], [–], [0.61],
   [optimized], [8], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
   [random], [32], [tbd], [tbd], [–], [tbd],
@@ -252,7 +252,7 @@ deployment arithmetic.
   baseline and the search are run as separate experiments (385 faults per
   class, R = 5 pattern draws per fault), filling the table above; the
   optimized rows follow once the first optimizer variant is available.
-  Budgets 1, 2 and 4 are complete.
+  Budgets 1 to 8 are complete.
 - *Localize the invisible faults.* Done: the depth trace (section
   "Faults invisible to the probe set") classifies all 206 faults and the
   fp32 recheck shows every effect is present in exact arithmetic.
