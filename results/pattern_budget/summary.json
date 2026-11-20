@@ -41,6 +41,27 @@
     "median_row_equiv": 264,
     "median_flops_est": 1566419189760
   },
+  "hotflip_n4": {
+    "faults": 770,
+    "repeats": 5,
+    "scopes": [
+      "exponent",
+      "mantissa"
+    ],
+    "coverage_pooled": 0.597922077922078,
+    "wilson_lo": 0.5823436033435605,
+    "wilson_hi": 0.6133053304372156,
+    "coverage_per_repeat": [
+      0.6480519480519481,
+      0.4064935064935065,
+      0.6896103896103896,
+      0.6350649350649351,
+      0.6103896103896104
+    ],
+    "mean_per_fault_rate": 0.597922077922078,
+    "median_row_equiv": 398,
+    "median_flops_est": 2696529838080
+  },
   "random-budget_n1": {
     "faults": 770,
     "repeats": 5,
@@ -82,5 +103,26 @@
     "mean_per_fault_rate": 0.4464935064935065,
     "median_row_equiv": 128,
     "median_flops_est": 281335562240
+  },
+  "random-budget_n4": {
+    "faults": 770,
+    "repeats": 5,
+    "scopes": [
+      "exponent",
+      "mantissa"
+    ],
+    "coverage_pooled": 0.6002597402597403,
+    "wilson_lo": 0.5846938432843382,
+    "wilson_hi": 0.6156257546981011,
+    "coverage_per_repeat": [
+      0.5441558441558442,
+      0.5831168831168831,
+      0.6402597402597403,
+      0.5415584415584416,
+      0.6922077922077922
+    ],
+    "mean_per_fault_rate": 0.6002597402597403,
+    "median_row_equiv": 256,
+    "median_flops_est": 1382835814400
   }
 }

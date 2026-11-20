@@ -1,0 +1,22 @@
+== repo root: /pfs/data6/home/ka/ka_stud/ka_uynqx/LLMFaultDetection
+== job 8742926 on uc2n618.localdomain, 1 logical cores
+Python 3.12.3
+== shard 25/32 of config experiments_cluster_naive_budget.yaml
+[1/2] naive_budget_n1_cluster: RUN
+  /home/ka/ka_stud/ka_uynqx/atpg-venv/bin/python src/run_hotflip_baseline.py --search discrete --model Qwen/Qwen3-0.6B --scopes mantissa,exponent --seed0 300 --faults 12 --out results/pattern_budget/naive_n1.jsonl.shard25 --hf-starts 1 --start-sampling random --repeats 5 --m 64 --budget-rows 13000 --search-max-evals 200
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc2n618
+Job ID: 8742926
+Array Job ID: 8742749_25
+Cluster: uc3
+User/Group: ka_uynqx/ka_stud
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 8
+CPU Utilized: 00:00:03
+CPU Efficiency: 2.21% of 00:02:16 core-walltime
+Job Wall-clock time: 00:00:17
+Memory Utilized: 34.65 MB
+Memory Efficiency: 0.14% of 24.00 GB (24.00 GB/node)

@@ -49,6 +49,32 @@ from run_pattern_comparison import (first_token_margin, hotflip_search,
 MODEL_ID = "Qwen/Qwen3-0.6B"
 
 
+def load_resume(out_path, method, check):
+    """Cells already recorded in out_path, keyed (scope, seed, repeat).
+
+    Tolerates a truncated final line (interrupted write). Aborts when an
+    existing record disagrees with the current invocation, so a rerun can
+    never silently mix configurations in one file."""
+    done = set()
+    if not os.path.exists(out_path):
+        return done
+    for line in open(out_path):
+        try:
+            r = json.loads(line)
+        except json.JSONDecodeError:
+            continue            # truncated by an interrupted write
+        if r.get("method") != method:
+            continue
+        err = check(r)
+        if err:
+            raise SystemExit(
+                f"{out_path}: existing record disagrees with this "
+                f"invocation ({err}). Archive the file to "
+                f"results/pattern_budget/partial/ and start fresh.")
+        done.add((r["scope"], r["seed"], r["repeat"]))
+    return done
+
+
 def free_run_verdict(model, ids, applier, m, eos):
     """Ground-truth detection: free-run divergence under the exact decode
     path of the deployment criterion."""
@@ -145,8 +171,25 @@ def main():
                          "be identical)")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    new_file = not os.path.exists(args.out)
-    with open(args.out, "a" if not new_file else "w") as out:
+
+    def check(r):
+        if r.get("hf_starts") != args.hf_starts:
+            return f"hf_starts {r.get('hf_starts')} != {args.hf_starts}"
+        if r.get("search") != args.search:
+            return f"search {r.get('search')} != {args.search}"
+        if r.get("start_seed") != args.start_seed + r.get("repeat"):
+            return f"start_seed {r.get('start_seed')} does not match"
+        for k in ("m", "margin", "hf_steps", "hf_width", "budget_rows"):
+            if r.get(k) != getattr(args, k):
+                return f"{k} mismatch"
+        return None
+
+    done = load_resume(args.out, "hotflip" if args.search == "grad"
+                       else "naive", check)
+    if done:
+        print(f"resuming: {len(done)} fault-repeats already recorded, "
+              f"skipping them", flush=True)
+    with open(args.out, "a") as out:
       for r in range(args.repeats):
         if start_idx_mode == "random":
             rng = random.Random(args.start_seed + r)
@@ -158,6 +201,8 @@ def main():
             start_idx = [i * len(prompts) // args.hf_starts
                          for i in range(args.hf_starts)]
         for fault in faults:
+            if (fault.scope, fault.seed, r) in done:
+                continue
             t0 = time.time()
             c0 = counter.as_dict()   # per-fault compute delta baseline
             applier = FaultApplier(fault, "bf16")

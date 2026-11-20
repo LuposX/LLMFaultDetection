@@ -149,12 +149,12 @@ one of the R repeats. The best method per budget is set in bold.
   [random], [2], [44.6% (43.1–46.2)], [69.2%], [–], [0.15],
   [optimized], [2], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
-  [search], [4], [tbd], [tbd], [tbd], [tbd],
-  [random], [4], [tbd], [tbd], [–], [tbd],
+  [search], [4], [59.8% (58.2–61.3)], [71.6%], [0.47], [0.31],
+  [random], [4], [#strong[60.0% (58.5–61.6)]], [71.7%], [–], [0.31],
   [optimized], [4], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
-  [search], [8], [tbd], [tbd], [tbd], [tbd],
-  [random], [8], [tbd], [tbd], [–], [tbd],
+  [search], [8], [68.7% (67.2–70.1)], [72.5%], [0.48], [0.61],
+  [random], [8], [#strong[69.4% (67.9–70.8)]], [#strong[100%]], [–], [0.61],
   [optimized], [8], [tbd], [tbd], [tbd], [tbd],
   table.hline(stroke: 0.5pt),
   [random], [32], [tbd], [tbd], [–], [tbd],
@@ -184,7 +184,7 @@ its patterns are taken as-is; both costs are medians per fault-repeat
 (usage cost is the verification decode, one
 64-token decode per evaluated pattern; the healthy reference is decoded
 once per draw and shared). The rows marked tbd are filled by the
-remaining pattern-budget experiments (budgets 4 and 8, naive rows on the
+remaining pattern-budget experiment (budget 8, naive rows on the
 cluster GPU); the search was not run with budgets above 8.
 
 At equal budget the search raises the pooled detection rate over the
@@ -196,19 +196,68 @@ percent of faults at n = 1 for either method, with 53 faults covered only
 by the random draw and 53 only by the optimized pattern; the pattern draws
 are shared between the two methods by construction), so the optimization
 raises the probability per draw rather than the number of reachable
-faults. The search spend stays far below its 13,000 row-equivalent budget
-(median 132 and 264 row-equivalents per fault-repeat at n = 1 and 2), so
+faults. At budgets 4 and 8 the pooled rates are statistically
+indistinguishable (60.0 against 59.8, and 69.4 against 68.7 percent)
+but the search reaches clearly fewer faults (71.6 against 71.7 percent,
+and 72.5 against a full 100 percent at budget 8), confirming that the
+optimization only pays for the first pattern. The
+search spend stays far below its 13,000 row-equivalent budget
+(median 132, 264 and 398 row-equivalents per fault-repeat at n = 1, 2
+and 4), so
 the reported gains are not produced by unequal compute.
+
+== Faults invisible to the probe set
+
+206 of the 770 faults (113 mantissa, 93 exponent) produced identical
+responses on all 100 probes of the full probe set and all five pattern
+draws. To decide whether these faults are detectable in principle, the
+faulty and healthy models are run on the same prompts and compared layer
+by layer: every transformer block's output is compared elementwise in
+bf16, together with the final logits and the greedy decode (five probes
+spread over the prompt file, 64-token decode; a one-probe pilot with
+8-token decode gives the same classification).
+
+#table(
+  columns: (auto, auto, auto),
+  align: (left, center, left),
+  table.hline(stroke: 0.8pt),
+  [*class*], [*count*], [*where the effect dies*],
+  table.hline(stroke: 0.5pt),
+  [logits-only], [187], [tied-embedding row; residual stream bit-identical],
+  [last-layer], [17], [enters at the final hidden state (blocks 26 and 27)],
+  [bit-identical], [2], [below bf16 logit resolution everywhere],
+  table.hline(y: 4, stroke: 0.8pt),
+)
+
+All 187 logits-only faults flip a bit in `model.embed_tokens.weight`.
+The output projection is tied to the embedding matrix, so the flip only
+alters one vocabulary token's logit row: the residual stream stays
+bit-identical on all five probes, and the shifted logit, even when moved
+by up to eight units in the exponent class, never wins the argmax. The
+17 last-layer faults flip weights in blocks 26 and 27; their effect
+enters the final hidden state and moves logits by up to about 0.1, never
+enough to change the greedy choice. The 2 bit-identical faults leave the
+bf16 logits unchanged on every probe.
+
+An fp32 recheck of the same faults (weights loaded in bf16, fault
+applied, both snapshots cast to fp32) shows that all 206 faults produce
+different fp32 logits, including the 2 bf16-bit-identical ones (logit
+gaps between 6e-6 and 5e-4). No invisible fault is mathematically
+masked; invisibility is a precision artifact of bf16 logit resolution.
+Detection beyond text comparison would have to read the logit margins of
+individual vocabulary tokens or work at higher precision than the
+deployment arithmetic.
 
 = Next steps
 
-- *Run the pattern-budget experiments.* For n = 1, 2, 4, 8, the random
+- *Run the pattern-budget experiments.* For n = 8, the random
   baseline and the search are run as separate experiments (385 faults per
   class, R = 5 pattern draws per fault), filling the table above; the
   optimized rows follow once the first optimizer variant is available.
-- *Localize the invisible faults.* For the 206 faults no test pattern exposes,
-  the output position at which the fault first changes the computation is to
-  be traced. This decides whether these faults are detectable in principle.
+  Budgets 1 to 8 are complete.
+- *Localize the invisible faults.* Done: the depth trace (section
+  "Faults invisible to the probe set") classifies all 206 faults and the
+  fp32 recheck shows every effect is present in exact arithmetic.
 - *Widen the search signal.* The gradient objective is to be extended from the
   first token to all output positions, including the first position at which
   responses diverge. This is the only route to detecting what random sampling
@@ -216,9 +265,10 @@ the reported gains are not produced by unequal compute.
 - *Complete the flip-multiplicity sweep* (k = 2 to 16) to map how
   detectability grows with fault severity.
 - *Cross-platform validation.* A sample of faults is to be re-decoded on both
-  machines used so far (desktop GPU, cluster CPU) and the responses verified
+  machines used so far (desktop GPU, cluster GPU) and the responses verified
   to match bit for bit, so the comparison above is not confounded by hardware.
-- check result from cluster after gpiu clibration is done: job id  8743275
+  The cluster calibration job (8743275) confirmed the H100 node runs the
+  same greedy path; the validation runs once the cluster rows land.
 
 #pagebreak()
 

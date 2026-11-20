@@ -1,0 +1,50 @@
+== job 8570441 on uc2n902.localdomain, GPU: 0
+Thu Nov 12 11:51:10 2026       
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 615.71.09              KMD Version: 615.71.09     CUDA UMD Version: 13.4     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA A100 80GB PCIe          On  |   00000000:1A:00.0 Off |                    0 |
+| N/A   38C    P0             52W /  300W |      27MiB /  81920MiB |      0%      Default |
+|                                         |                        |             Disabled |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A           13362      G   /usr/libexec/Xorg                        17MiB |
++-----------------------------------------------------------------------------------------+
+Python 3.12.3
+== creating venv at /home/ka/ka_stud/ka_uynqx/atpg-venv
+== installing requirements.txt
+Requirement already satisfied: pip in /home/ka/ka_stud/ka_uynqx/atpg-venv/lib/python3.12/site-packages (24.0)
+Collecting pip
+  Downloading pip-26.3-py3-none-any.whl.metadata (4.6 kB)
+Downloading pip-26.3-py3-none-any.whl (2.0 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.0/2.0 MB 27.4 MB/s eta 0:00:00
+Installing collected packages: pip
+  Attempting uninstall: pip
+    Found existing installation: pip 24.0
+    Uninstalling pip-24.0:
+      Successfully uninstalled pip-24.0
+Successfully installed pip-26.3
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc2n902
+Job ID: 8570441
+Cluster: uc3
+User/Group: ka_uynqx/ka_stud
+State: FAILED (exit code 1)
+Nodes: 1
+Cores per node: 8
+CPU Utilized: 00:00:07
+CPU Efficiency: 2.19% of 00:05:20 core-walltime
+Job Wall-clock time: 00:00:40
+Memory Utilized: 66.27 MB
+Memory Efficiency: 0.20% of 32.00 GB (32.00 GB/node)
