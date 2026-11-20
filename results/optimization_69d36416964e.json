@@ -1,0 +1,206 @@
+{
+  "model": "Qwen/Qwen3-0.6B",
+  "args": {
+    "model": "Qwen/Qwen3-0.6B",
+    "scope": "mantissa",
+    "k": 1,
+    "fault_seed": null,
+    "scan_seeds": 8,
+    "init": 0,
+    "n": 16,
+    "m": 32,
+    "steps": 200,
+    "lr": 0.1,
+    "tau_start": 2.0,
+    "tau_end": 1.0,
+    "probe_tokens": 64,
+    "batch": 8,
+    "log_every": 10,
+    "check_every": 50,
+    "device": "cuda"
+  },
+  "fault": {
+    "id": "69d36416964e",
+    "k": 1,
+    "scope": "mantissa",
+    "seed": 1,
+    "flips": [
+      [
+        "model.embed_tokens.weight",
+        126255339,
+        4
+      ]
+    ]
+  },
+  "activation": 0.0625,
+  "random_probe_detections": 0,
+  "init_prompt": "Oldham 's townscape was dominated by distinctive rectangular brick @-@ built mills . Oldham was hit hard by the Lancashire Cotton Famine of 1861 \u2013 1865 , when supplies of raw cotton from the United States were cut off .",
+  "prompt_ids": [
+    18284,
+    5604,
+    364,
+    82,
+    24824,
+    5330,
+    572,
+    29701,
+    553,
+    34847,
+    51424,
+    24837,
+    569,
+    12,
+    31,
+    5798,
+    31908,
+    659,
+    10621,
+    5604,
+    572,
+    4201,
+    2588,
+    553,
+    279,
+    38534,
+    96314,
+    37696,
+    434,
+    19991,
+    315,
+    220,
+    16,
+    23,
+    21,
+    16,
+    1365,
+    220,
+    16,
+    23,
+    21,
+    20,
+    1154,
+    979,
+    16720,
+    315,
+    7112,
+    23522,
+    504,
+    279,
+    3639,
+    4180,
+    1033,
+    3931,
+    1007,
+    659
+  ],
+  "prompt_text": "Oldham 's townscape was dominated by distinctive rectangular brick @-@ built mills . Oldham was hit hard by the Lancashire Cotton Famine of 1861 \u2013 1865 , when supplies of raw cotton from the United States were cut off .",
+  "curve": [
+    {
+      "step": 0,
+      "tau": 2.0,
+      "js": 2.3538875737472154e-08
+    },
+    {
+      "step": 10,
+      "tau": 1.95,
+      "js": 1.2249177672174483e-08
+    },
+    {
+      "step": 20,
+      "tau": 1.9,
+      "js": 1.946402505836886e-08
+    },
+    {
+      "step": 30,
+      "tau": 1.85,
+      "js": 2.477814220469554e-08
+    },
+    {
+      "step": 40,
+      "tau": 1.8,
+      "js": 2.1654294357631443e-08
+    },
+    {
+      "step": 50,
+      "tau": 1.75,
+      "js": 1.9571800180528953e-08
+    },
+    {
+      "step": 60,
+      "tau": 1.7,
+      "js": 1.1530146615257308e-08
+    },
+    {
+      "step": 70,
+      "tau": 1.65,
+      "js": 2.479864313897906e-08
+    },
+    {
+      "step": 80,
+      "tau": 1.6,
+      "js": 1.2811261385081707e-08
+    },
+    {
+      "step": 90,
+      "tau": 1.55,
+      "js": 2.1869325905754522e-08
+    },
+    {
+      "step": 100,
+      "tau": 1.5,
+      "js": 8.79749695315013e-09
+    },
+    {
+      "step": 110,
+      "tau": 1.45,
+      "js": 2.2822648659825973e-08
+    },
+    {
+      "step": 120,
+      "tau": 1.4,
+      "js": 2.379111840866699e-08
+    },
+    {
+      "step": 130,
+      "tau": 1.35,
+      "js": 1.9373439741343645e-08
+    },
+    {
+      "step": 140,
+      "tau": 1.3,
+      "js": 1.980620467634253e-08
+    },
+    {
+      "step": 150,
+      "tau": 1.25,
+      "js": 2.6946155529117277e-08
+    },
+    {
+      "step": 160,
+      "tau": 1.2,
+      "js": 2.7782967038092465e-08
+    },
+    {
+      "step": 170,
+      "tau": 1.15,
+      "js": 2.7782967038092465e-08
+    },
+    {
+      "step": 180,
+      "tau": 1.1,
+      "js": 2.7782967038092465e-08
+    },
+    {
+      "step": 190,
+      "tau": 1.05,
+      "js": 2.7782967038092465e-08
+    },
+    {
+      "step": 200,
+      "tau": 1.0,
+      "js": 2.7782967038092465e-08
+    }
+  ],
+  "detected": false,
+  "first_divergence": null
+}

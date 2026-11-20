@@ -1,0 +1,66 @@
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+/nix/store/an7v8xgqz94vf2sif5fybpyi93j4avpj-python3-3.13.12-env/lib/python3.13/site-packages/laya/agent.py:2144: RuntimeWarning: laya: this checkpoint ships invalid temperatures or values outside [0.5, 5]; using choice:11+=0.10058280825614929 -> 0.5. Treat confidence from the affected entries as uncalibrated.
+  return Agent(model_id_or_path, device=device, token=token, subfolder=subfolder, fast=fast,
+probes: 100 prompts, healthy reference cached
+=== trial 1/22: rho=0 seed=0 (run ETA unknown until first trial finishes)
+    trial took 0s — metrics: {"skipped": "--skip-eval"}
+=== trial 2/22: rho=1e-11 seed=0 (run ETA ~0s left)
+    zero flips — model unchanged, skipping eval
+=== trial 3/22: rho=1e-11 seed=1 (run ETA ~3s left)
+    zero flips — model unchanged, skipping eval
+=== trial 4/22: rho=1e-11 seed=2 (run ETA ~4s left)
+    zero flips — model unchanged, skipping eval
+=== trial 5/22: rho=1e-10 seed=0 (run ETA ~4s left)
+    sem: match=1.000 first_div=None js=4.54e-09 laya=0.335 cos=1.0000
+    trial took 3m 42s — metrics: {"skipped": "--skip-eval"}
+=== trial 6/22: rho=1e-10 seed=1 (run ETA ~12m 38s left)
+    sem: match=0.616 first_div=23.0 js=0.000192 laya=0.219 cos=0.8673
+    trial took 3m 39s — metrics: {"skipped": "--skip-eval"}
+=== trial 7/22: rho=1e-10 seed=2 (run ETA ~19m 40s left)
+    sem: match=1.000 first_div=None js=4.49e-09 laya=0.335 cos=1.0000
+    trial took 3m 40s — metrics: {"skipped": "--skip-eval"}
+=== trial 8/22: rho=1e-09 seed=0 (run ETA ~23m 39s left)
+    sem: match=0.003 first_div=0.23 js=0.56 laya=0.212 cos=0.0888
+    trial took 3m 34s — metrics: {"skipped": "--skip-eval"}
+=== trial 9/22: rho=1e-09 seed=1 (run ETA ~25m 34s left)
+    sem: match=0.620 first_div=22.982142857142858 js=0.00019 laya=0.222 cos=0.8648
+    trial took 3m 40s — metrics: {"skipped": "--skip-eval"}
+=== trial 10/22: rho=1e-09 seed=2 (run ETA ~26m 25s left)
+    sem: match=0.567 first_div=22.328125 js=0.000199 laya=0.196 cos=0.8413
+    trial took 3m 40s — metrics: {"skipped": "--skip-eval"}
+=== trial 11/22: rho=1e-08 seed=0 (run ETA ~26m 21s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 20s — metrics: {"skipped": "--skip-eval"}
+=== trial 12/22: rho=1e-08 seed=1 (run ETA ~27m 18s left)
+    sem: match=0.001 first_div=0.01 js=0.623 laya=0.181 cos=0.0664
+    trial took 3m 50s — metrics: {"skipped": "--skip-eval"}
+=== trial 13/22: rho=1e-08 seed=2 (run ETA ~25m 57s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 17s — metrics: {"skipped": "--skip-eval"}
+=== trial 14/22: rho=1e-07 seed=0 (run ETA ~25m 13s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 12s — metrics: {"skipped": "--skip-eval"}
+=== trial 15/22: rho=1e-07 seed=1 (run ETA ~23m 47s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 09s — metrics: {"skipped": "--skip-eval"}
+=== trial 16/22: rho=1e-07 seed=2 (run ETA ~21m 49s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 10s — metrics: {"skipped": "--skip-eval"}
+=== trial 17/22: rho=1e-06 seed=0 (run ETA ~19m 28s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 07s — metrics: {"skipped": "--skip-eval"}
+=== trial 18/22: rho=1e-06 seed=1 (run ETA ~16m 47s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 11s — metrics: {"skipped": "--skip-eval"}
+=== trial 19/22: rho=1e-06 seed=2 (run ETA ~13m 50s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 12s — metrics: {"skipped": "--skip-eval"}
+=== trial 20/22: rho=1e-05 seed=0 (run ETA ~10m 39s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 10s — metrics: {"skipped": "--skip-eval"}
+=== trial 21/22: rho=1e-05 seed=1 (run ETA ~7m 16s left)
+    sem: match=0.000 first_div=0.0 js=0.693 laya=0.063 cos=0.0179
+    trial took 5m 12s — metrics: {"skipped": "--skip-eval"}
+=== trial 22/22: rho=1e-05 seed=2 (run ETA ~3m 42s left)
+    sem: match=0.000 first_div=0.0 js=0.681 laya=0.063 cos=0.0179
+    trial took 5m 12s — metrics: {"skipped": "--skip-eval"}
