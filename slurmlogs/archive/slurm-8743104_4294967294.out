@@ -1,0 +1,24 @@
+== threads: OMP=1 torch.get_num_threads will be set by the runner
+== repeat 1/1: starts [79]
+mantissa seed=372 fault=e21a3025901f discrete=DET d=0 starts=1 rows=256 (539.8s)
+total: 256 row-equivalents, 0.6 TFLOP (estimated), platform cpu
+
+== calibration readout ==
+fault None: 256 row-equiv in 540s -> 0.5 rows/s; stop=detected-at-start-0
+  worst-case shard projection at this rate: 1112.9 h for 240 fault-repeat units (budget-exhausted mean 8000 rows assumption)
+  if typical detection halves that, scale accordingly
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc2n839
+Job ID: 8743104
+Cluster: uc3
+User/Group: ka_uynqx/ka_stud
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 8
+CPU Utilized: 00:09:10
+CPU Efficiency: 10.88% of 01:24:16 core-walltime
+Job Wall-clock time: 00:10:32
+Memory Utilized: 3.14 GB
+Memory Efficiency: 13.07% of 24.00 GB (24.00 GB/node)

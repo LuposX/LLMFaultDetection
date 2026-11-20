@@ -1,0 +1,26 @@
+== device check ==
+torch 2.9.1+cu128 cuda build: 12.8
+cuda available: True
+device: NVIDIA H100 PCIe
+== repeat 1/1: starts [79]
+mantissa seed=372 fault=e21a3025901f discrete=DET d=0 starts=1 rows=256 (20.1s)
+total: 256 row-equivalents, 0.6 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+
+== calibration readout ==
+fault None: 256 row-equiv in 20.1s -> 12.7 rows/s; stop=detected-at-start-0
+  NOTE: this fault is detected at the first candidate, so the rate reflects detection-speed paths (margin evals dominate). For budget-exhausted sizing, the whole-fault wall clock at this rate is roughly rows/13000 scaled by 5 repeats.
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc2n915
+Job ID: 8743275
+Cluster: uc3
+User/Group: ka_uynqx/ka_stud
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 8
+CPU Utilized: 00:00:33
+CPU Efficiency: 3.33% of 00:16:32 core-walltime
+Job Wall-clock time: 00:02:04
+Memory Utilized: 2.82 GB
+Memory Efficiency: 11.75% of 24.00 GB (24.00 GB/node)

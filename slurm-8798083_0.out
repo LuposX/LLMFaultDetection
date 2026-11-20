@@ -1,0 +1,227 @@
+== repo root: /pfs/data6/home/ka/ka_stud/ka_uynqx/LLMFaultDetection
+== job 8798083 on uc2n908.localdomain, 1 logical cores
+Python 3.12.3
+== shard 0/96 of config experiments_cluster_naive_gpu.yaml
+[1/4] naive_budget_n1_gpu: RUN
+  /home/ka/ka_stud/ka_uynqx/atpg-venv/bin/python src/run_hotflip_baseline.py --search discrete --model Qwen/Qwen3-0.6B --scopes mantissa,exponent --seed0 0 --faults 4 --out results/pattern_budget/naive_n1.jsonl.shard0 --hf-starts 1 --start-sampling random --repeats 5 --m 64 --budget-rows 13000 --search-max-evals 200
+== repeat 1/5: starts [49]
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+mantissa seed=  0 fault=e7dd6e33b94f discrete=no d=None starts=1 rows=128 (19.7s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=1 rows=128 (16.5s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=no d=None starts=1 rows=128 (16.3s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=no d=None starts=1 rows=128 (16.4s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=no d=None starts=1 rows=128 (16.3s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=1 rows=128 (16.3s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=no d=None starts=1 rows=128 (16.4s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=no d=None starts=1 rows=128 (16.3s)
+== repeat 2/5: starts [17]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=128 (16.5s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=1 rows=128 (16.4s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (20.2s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (11.9s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.4s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=1 rows=128 (16.4s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (8.5s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.6s)
+== repeat 3/5: starts [7]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (8.8s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=1 rows=128 (16.4s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.8s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.8s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.7s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=1 rows=128 (16.4s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=44 starts=1 rows=128 (16.4s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.7s)
+== repeat 4/5: starts [30]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (10.0s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=1 rows=128 (16.3s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.0s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.1s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=1 rows=128 (16.3s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.3s)
+== repeat 5/5: starts [30]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (10.0s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=1 rows=128 (16.3s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.0s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=1 rows=128 (16.5s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (8.2s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.3s)
+total: 7936 row-equivalents, 16.9 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+  done -> results/pattern_budget/naive_n1.jsonl.shard0
+  ... total: 7936 row-equivalents, 16.9 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+[2/4] naive_budget_n2_gpu: RUN
+  /home/ka/ka_stud/ka_uynqx/atpg-venv/bin/python src/run_hotflip_baseline.py --search discrete --model Qwen/Qwen3-0.6B --scopes mantissa,exponent --seed0 0 --faults 4 --out results/pattern_budget/naive_n2.jsonl.shard0 --hf-starts 2 --start-sampling random --repeats 5 --m 64 --budget-rows 13000 --search-max-evals 200
+== repeat 1/5: starts [49, 97]
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=2 rows=384 (28.7s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=2 rows=256 (32.9s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=2 rows=384 (28.1s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=2 rows=384 (28.2s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=2 rows=384 (28.1s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=2 rows=256 (32.8s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=2 rows=384 (28.1s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=2 rows=384 (28.3s)
+== repeat 2/5: starts [17, 72]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=128 (16.4s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=2 rows=256 (32.7s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (20.2s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (11.9s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.4s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=2 rows=256 (32.8s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (8.4s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.4s)
+== repeat 3/5: starts [7, 11]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (8.8s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=2 rows=256 (32.9s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.8s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.9s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.7s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=2 rows=256 (32.7s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=44 starts=1 rows=128 (16.4s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.7s)
+== repeat 4/5: starts [30, 75]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (10.2s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=2 rows=256 (32.9s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.0s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.2s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=2 rows=256 (34.9s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (8.2s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.5s)
+== repeat 5/5: starts [30, 38]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (10.3s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=2 rows=256 (33.0s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.0s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=2 rows=256 (32.7s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (8.0s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.4s)
+total: 10752 row-equivalents, 28.8 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+  done -> results/pattern_budget/naive_n2.jsonl.shard0
+  ... total: 10752 row-equivalents, 28.8 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+[3/4] naive_budget_n4_gpu: RUN
+  /home/ka/ka_stud/ka_uynqx/atpg-venv/bin/python src/run_hotflip_baseline.py --search discrete --model Qwen/Qwen3-0.6B --scopes mantissa,exponent --seed0 0 --faults 4 --out results/pattern_budget/naive_n4.jsonl.shard0 --hf-starts 4 --start-sampling random --repeats 5 --m 64 --budget-rows 13000 --search-max-evals 200
+== repeat 1/5: starts [5, 49, 53, 97]
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (13.0s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=4 rows=512 (65.1s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (12.6s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (11.7s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (11.3s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=4 rows=512 (65.3s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (11.4s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (11.3s)
+== repeat 2/5: starts [8, 17, 72, 97]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=2 rows=256 (32.6s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=4 rows=512 (65.0s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=2 rows=384 (36.3s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=2 rows=384 (28.0s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=2 rows=384 (24.7s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=4 rows=512 (65.1s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=37 starts=1 rows=128 (16.4s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=2 rows=384 (24.9s)
+== repeat 3/5: starts [7, 10, 11, 46]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (8.7s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=4 rows=512 (65.2s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.7s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.8s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (9.5s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=4 rows=512 (65.8s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=44 starts=1 rows=128 (16.3s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.9s)
+== repeat 4/5: starts [16, 30, 69, 75]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=2 rows=384 (26.2s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=4 rows=512 (66.4s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=2 rows=384 (24.4s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=42 starts=1 rows=128 (16.3s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=2 rows=384 (24.1s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=4 rows=512 (65.2s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=51 starts=1 rows=128 (16.3s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=51 starts=1 rows=128 (16.4s)
+== repeat 5/5: starts [13, 30, 38, 92]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (10.9s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=4 rows=512 (65.0s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (10.9s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (10.0s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.3s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=4 rows=512 (65.2s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (8.4s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (11.6s)
+total: 13056 row-equivalents, 30.6 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+  done -> results/pattern_budget/naive_n4.jsonl.shard0
+  ... total: 13056 row-equivalents, 30.6 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+[4/4] naive_budget_n8_gpu: RUN
+  /home/ka/ka_stud/ka_uynqx/atpg-venv/bin/python src/run_hotflip_baseline.py --search discrete --model Qwen/Qwen3-0.6B --scopes mantissa,exponent --seed0 0 --faults 4 --out results/pattern_budget/naive_n8.jsonl.shard0 --hf-starts 8 --start-sampling random --repeats 5 --m 64 --budget-rows 13000 --search-max-evals 200
+== repeat 1/5: starts [5, 33, 49, 51, 53, 62, 65, 97]
+The following generation flags are not valid and may be ignored: ['temperature', 'top_p', 'top_k']. Set `TRANSFORMERS_VERBOSITY=info` for more details.
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (12.7s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=8 rows=1024 (129.2s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (12.3s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (11.6s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (11.2s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=8 rows=1024 (128.5s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=0 starts=1 rows=256 (11.2s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (11.1s)
+== repeat 2/5: starts [8, 15, 17, 32, 57, 63, 72, 97]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=10 starts=2 rows=256 (32.2s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=8 rows=1024 (128.5s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=3 starts=2 rows=256 (32.4s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=28 starts=2 rows=256 (32.1s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=7 starts=2 rows=256 (32.1s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=8 rows=1024 (131.2s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=37 starts=1 rows=128 (16.2s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=3 starts=2 rows=256 (32.1s)
+== repeat 3/5: starts [7, 10, 11, 21, 39, 46, 85, 94]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=1 rows=256 (8.6s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=8 rows=1024 (129.6s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=1 rows=256 (8.7s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=0 starts=1 rows=256 (8.7s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=1 rows=256 (8.5s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=8 rows=1024 (129.9s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=44 starts=1 rows=128 (16.3s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=0 starts=1 rows=256 (8.6s)
+== repeat 4/5: starts [16, 30, 47, 60, 69, 75, 77, 80]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=0 starts=2 rows=384 (26.3s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=8 rows=1024 (131.1s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=0 starts=2 rows=384 (24.3s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=42 starts=1 rows=128 (16.1s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=0 starts=2 rows=384 (23.9s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=8 rows=1024 (129.9s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=51 starts=1 rows=128 (16.3s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=51 starts=1 rows=128 (16.2s)
+== repeat 5/5: starts [11, 13, 19, 30, 38, 50, 61, 92]
+mantissa seed=  0 fault=e7dd6e33b94f discrete=DET d=4 starts=1 rows=128 (16.1s)
+mantissa seed=  1 fault=69d36416964e discrete=no d=None starts=8 rows=1024 (130.9s)
+mantissa seed=  2 fault=bf5618dbb00c discrete=DET d=4 starts=1 rows=128 (16.3s)
+mantissa seed=  3 fault=82d9f5c7153a discrete=DET d=4 starts=1 rows=128 (16.5s)
+exponent seed=  0 fault=d5ed5dcb4185 discrete=DET d=31 starts=1 rows=128 (16.3s)
+exponent seed=  1 fault=b5b417dfda3b discrete=no d=None starts=8 rows=1024 (132.4s)
+exponent seed=  2 fault=b2ddb76b4ce6 discrete=DET d=4 starts=1 rows=128 (16.2s)
+exponent seed=  3 fault=70aa9f25d4c1 discrete=DET d=4 starts=1 rows=128 (16.2s)
+total: 16896 row-equivalents, 41.5 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+  done -> results/pattern_budget/naive_n8.jsonl.shard0
+  ... total: 16896 row-equivalents, 41.5 TFLOP (estimated), platform cuda:0 NVIDIA H100 PCIe
+== shard done; merge after all tasks with:
+    python src/run_experiments.py --config experiments_cluster_naive_gpu.yaml --merge
+== done
+
+============================= JOB FEEDBACK =============================
+
+NodeName=uc2n908
+Job ID: 8798083
+Array Job ID: 8760974_0
+Cluster: uc3
+User/Group: ka_uynqx/ka_stud
+State: COMPLETED (exit code 0)
+Nodes: 1
+Cores per node: 8
+CPU Utilized: 01:10:08
+CPU Efficiency: 12.09% of 09:40:00 core-walltime
+Job Wall-clock time: 01:12:30
+Memory Utilized: 2.90 GB
+Memory Efficiency: 12.07% of 24.00 GB (24.00 GB/node)

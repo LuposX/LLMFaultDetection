@@ -1,0 +1,7 @@
+Traceback (most recent call last):
+  File "/pfs/data6/home/ka/ka_stud/ka_uynqx/LLMFaultDetection/src/run_experiments.py", line 186, in <module>
+    main()
+  File "/pfs/data6/home/ka/ka_stud/ka_uynqx/LLMFaultDetection/src/run_experiments.py", line 158, in main
+    with open(log_path, "w") as log:
+         ^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'results/pattern_budget/naive_n1.jsonl.shard0.log'
