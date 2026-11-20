@@ -1,0 +1,20 @@
+resuming: 3850 fault-repeats already recorded, skipping them
+== repeat 1/5: subset e5fd2635 [5, 33, 49, 51, 53, 62, 65, 97] — healthy reference
+   healthy: 0 fresh, 8 cached
+faults r0:   0%|          | 0/770 [00:00<?, ?fault/s]faults r0: 100%|██████████| 770/770 [00:00<00:00, 5577917.24fault/s]
+== repeat 2/5: subset 5edfeb16 [8, 15, 17, 32, 57, 63, 72, 97] — healthy reference
+   healthy: 0 fresh, 8 cached
+faults r1:   0%|          | 0/770 [00:00<?, ?fault/s]faults r1: 100%|██████████| 770/770 [00:00<00:00, 7273905.59fault/s]
+== repeat 3/5: subset d8df0a61 [7, 10, 11, 21, 39, 46, 85, 94] — healthy reference
+   healthy: 0 fresh, 8 cached
+faults r2:   0%|          | 0/770 [00:00<?, ?fault/s]faults r2: 100%|██████████| 770/770 [00:00<00:00, 7726349.47fault/s]
+== repeat 4/5: subset 2af20ac0 [16, 30, 47, 60, 69, 75, 77, 80] — healthy reference
+   healthy: 0 fresh, 8 cached
+faults r3:   0%|          | 0/770 [00:00<?, ?fault/s]faults r3: 100%|██████████| 770/770 [00:00<00:00, 7896366.94fault/s]
+== repeat 5/5: subset 2b3fc826 [11, 13, 19, 30, 38, 50, 61, 92] — healthy reference
+   healthy: 0 fresh, 8 cached
+faults r4:   0%|          | 0/770 [00:00<?, ?fault/s]faults r4: 100%|██████████| 770/770 [00:00<00:00, 7819888.81fault/s]
+== summary (coverage per repeat):
+  n=  8 mantissa: 61.3% | 63.9% | 63.6% | 66.0% | 64.7% -> pooled 63.9% (1925 fault-repeats)
+  n=  8 exponent: 71.9% | 75.3% | 76.1% | 75.6% | 75.1% -> pooled 74.8% (1925 fault-repeats)
+total: 0 row-equivalents, 0.0 TFLOP (estimated), platform cuda:0 AMD Radeon RX 9070

@@ -49,6 +49,32 @@ from lib.loading import load_model  # noqa: E402
 MODEL_ID = "Qwen/Qwen3-0.6B"
 
 
+def load_resume(out_path, method, check):
+    """Cells already recorded in out_path, keyed (scope, seed, repeat).
+
+    Tolerates a truncated final line (interrupted write). Aborts when an
+    existing record disagrees with the current invocation, so a rerun can
+    never silently mix configurations in one file."""
+    done = set()
+    if not os.path.exists(out_path):
+        return done
+    for line in open(out_path):
+        try:
+            r = json.loads(line)
+        except json.JSONDecodeError:
+            continue            # truncated by an interrupted write
+        if r.get("method") != method:
+            continue
+        err = check(r)
+        if err:
+            raise SystemExit(
+                f"{out_path}: existing record disagrees with this "
+                f"invocation ({err}). Archive the file to "
+                f"results/pattern_budget/partial/ and start fresh.")
+        done.add((r["scope"], r["seed"], r["repeat"]))
+    return done
+
+
 def run_budget_mode(args, prompts, pf_hash, faults, scopes):
     """Pattern-budget mode: R random n-subsets, all faults on each subset."""
     model, tokenizer = load_model(args.model, args.device)
@@ -59,7 +85,20 @@ def run_budget_mode(args, prompts, pf_hash, faults, scopes):
     base_key = (args.model, args.max_new_tokens, args.batch, pf_hash)
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    new_file = not os.path.exists(args.out)
+
+    def check(r):
+        if r.get("n_patterns") != args.n_patterns:
+            return f"n_patterns {r.get('n_patterns')} != {args.n_patterns}"
+        if r.get("subset_seed") != args.subset_seed + r.get("repeat"):
+            return f"subset_seed {r.get('subset_seed')} does not match "
+        if r.get("max_new_tokens") != args.max_new_tokens:
+            return "max_new_tokens mismatch"
+        return None
+
+    done = load_resume(args.out, "random-budget", check)
+    if done:
+        print(f"resuming: {len(done)} fault-repeats already recorded, "
+              f"skipping them", flush=True)
     with open(args.out, "a") as out:
         for r in range(args.repeats):
             rng = random.Random(args.subset_seed + r)
@@ -79,6 +118,8 @@ def run_budget_mode(args, prompts, pf_hash, faults, scopes):
             bar = tqdm(faults, desc=f"faults r{r}", unit="fault",
                        dynamic_ncols=True)
             for fault in bar:
+                if (fault.scope, fault.seed, r) in done:
+                    continue
                 t0 = time.time()
                 c0 = counter.as_dict()
                 faulty, n_new = decode_with_cache(
